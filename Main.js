@@ -52,7 +52,7 @@ dim.log("Start: "+__FILE__+" ["+__DATE__+"]");
 if (!$['schedule-database'])
     throw new Error("Environment 'schedule-database' not set!");
 
-var observations = [ ];
+
 dim.onchange['FEEDBACK'] = reschedule_if_high_currents;
 var service_feedback = Feedback();
 var datalogger_subscriptions = Datalogger();
@@ -94,24 +94,7 @@ service_feedback.get(5000);
 dimctrl.setInterruptHandler(handleIrq);
 dim.send("FAD_CONTROL/SET_FILE_FORMAT", 6);
 
-// ----------------------------------------------------------------
-// Print some information for the user about the
-// expected first oberservation
-// ----------------------------------------------------------------
-observations = getSchedule();
-var test = get_index_of_current_observation(observations);
-if (test!=undefined)
-{
-    var n = new Date();
-    if (observations.length>0 && test==-1)
-        dim.log("First observation scheduled for "+observations[0].start.toUTCString()+" [id="+observations[0].id+"]");
-    if (test>=0 && test<observations.length)
-        dim.log("First observation should start immediately ["+observations[test].start.toUTCString()+", id="+observations[test].id+"]");
-    if (observations.length>0 && observations[0].start>n+12*3600*1000)
-        dim.log("No observations scheduled for the next 12 hours!");
-    if (observations.length==0)
-        dim.log("No observations scheduled!");
-}
+print_info_about_first_observation();
 
 // ----------------------------------------------------------------
 // Start main loop
@@ -130,8 +113,7 @@ while (!processIrq(service_feedback, irq))
 {
     // Check if observation position is still valid
     // If source position has changed, set run=0
-    observations = getSchedule();
-    var idxObs = get_index_of_current_observation(observations);
+    var idxObs = get_index_of_current_observation();
     if (idxObs===undefined)
         break;
 
@@ -162,31 +144,18 @@ while (!processIrq(service_feedback, irq))
     var nextObs = observations[idxObs+1];
 
     // Check if observation target has changed
-    if (lastId!=obs.id) // !Object.isEqual(obs, nextObs)
+    if (lastId!=obs.id)
     {
         dim.log("Starting new observation ["+obs.start.toUTCString()+", id="+obs.id+"]");
-
-        // This is the first source, but we do not come from
-        // a scheduled 'START', so we have to check if the
-        // telescop is operational already
         sub = 0;
-        if (run<0)
-        {
-            //Startup();   // -> Bias On/Off?, Lid open/closed?
-            //CloseLid();
-        }
-
-        // The first observation had a start-time in the past...
-        // In this particular case start with the last entry
-        // in the list of measurements
-        if (run==-2)
+        if (run==-2){
             sub = obs.length-1;
-
+        }
         run = 0;
         lastId = obs.id;
     }
 
-    //dim.log("DEBUG: Next observation scheduled for "+nextObs.start.toUTCString()+" [id="+nextObs.id+"]");
+
     if (nextObs && nextId!=nextObs.id)
     {
         dim.log("Next observation scheduled for "+nextObs.start.toUTCString()+" [id="+nextObs.id+"]");
@@ -201,11 +170,6 @@ while (!processIrq(service_feedback, irq))
         nextId = undefined;
     }
 
-    //if (nextObs==undefined && obs[obs.length-1].task!="SHUTDOWN")
-    //    throw Error("Last scheduled measurement must be a shutdown.");
-
-    // We are done with all measurement slots for this
-    // observation... wait for next observation
     if (sub>=obs.length)
     {
         v8.sleep(1000);
