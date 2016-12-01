@@ -1,47 +1,5 @@
 'use strict';
 
-// To de done:
-//  - CheckLID status (should be open or closed)
-//  - Is it necessary to switch the bias-voltage off?
-//  - Get reasonable timeouts for all steps (wait, get, run)
-//  - Improve order to accelerate execution
-//
-// =================================================================
-
-/*
-var table =
-[
- [ "AGILENT_CONTROL" ],
- [ "BIAS_CONTROL"    ],
- [ "CHAT"            ],
- [ "DATA_LOGGER"     ],
- [ "DRIVE_CONTROL"   ],
- [ "FEEDBACK"        ],
- [ "FAD_CONTROL"     ],
- [ "FSC_CONTROL"     ],
- [ "FTM_CONTROL"     ],
- [ "LID_CONTROL"     ],
- [ "MAGIC_WEATHER"   ],
- [ "MCP"             ],
- [ "PWR_CONTROL"     ],
- [ "RATE_CONTROL"    ],
- [ "RATE_SCAN"       ],
- [ "SMART_FACT"      ],
- [ "TIME_CHECK"      ],
- [ "TNG_WEATHER"     ],
-];
-
-if (dim.state("DRIVE_CONTROL").name=="Locked")
-{
-    throw new Error("Drivectrl still locked... needs UNLOCK first.");
-    //while (!dim.send("DRIVE_CONTROL"))
-    //    v8.sleep();
-    //dim.send("DRIVE_CONTROL/UNLOCK");
-    //dim.wait("DRIVE_CONTROL", "Armed", 1000);
-}
-
-*/
-
 console.out("");
 dim.alarm();
 
@@ -67,8 +25,6 @@ loop = new Handler("PowerOn");
 loop.add(handlePwrCameraOn);
 loop.run();
 console.out("");
-
-// If power was switched on: wait for a few seconds
 
 // -----------------------------------------------------------------
 // Now take care that the bias control, the ftm and the fsc are
@@ -114,18 +70,6 @@ dim.send("FTM_CONTROL/ENABLE_FTU", -1, true);
 // Now we check the FTU connection
 // -----------------------------------------------------------------
 
-/*
-include("scripts/handleFtuCheck.js");
-
-loop = new Handler("FtuCheck");
-loop.ftuList = new Subscription("FTM_CONTROL/FTU_LIST");
-loop.add(handleFtuCheck);
-loop.run();
-loop.ftuList.close();
-
-dim.log("All FTUs are enabled and without error.");
-*/
-
 console.out("Checking FTU: start");
 include("scripts/CheckFTU.js");
 console.out("Checking FTU: done");
@@ -143,34 +87,6 @@ if (sub_counter.get(0, false).qos&0x100==0)
     throw new Error("Clock conditioner not locked.");
 sub_counter.close();
 
-// -----------------------------------------------------------------
-// Now we can safely try to connect the FAD boards.
-// -----------------------------------------------------------------
-/*
- include("scripts/handleFadConnected.js");
-
-// If FADs already connected
-
-checkSend(["FAD_CONTROL"]);
-
-loop = new Handler("ConnectFad");
-loop.add(handleFadConnected);
-loop.run();
-
-var failed = false;
-dim.onchange["FAD_CONTROL"] = function(arg)
-{
-    if (this.rc && arg.name!="Connected")
-        failed = true;
-}
-
-console.out("FADs connected.");
-console.out("");
-
-console.out(dim.state("FAD_CONTROL").name);
-console.out(dim.state("MCP").name);
-*/
-
 // ================================================================
 // Underflow check
 // ================================================================
@@ -180,16 +96,12 @@ console.out(dim.state("MCP").name);
 
 include('scripts/CheckUnderflow.js');
 
-// Now it is time to check the connection of the FADs
-// it might hav thrown an exception already anyway
-
 
 // ================================================================
 // Power on drive system if power is off (do it hre to make sure not
 // everything is switchd on at the same time)
 // ================================================================
 
-//console.out("PWR: "+(dim.state("PWR_CONTROL").index&16));
 
 if ((dim.state("PWR_CONTROL").index&16)==0)
 {
@@ -214,10 +126,6 @@ loop.run();
 // and the last calibration was more than eight hours ago.
 // -----------------------------------------------------------------
 
-// At this point we know that:
-//  1) The lid is closed
-//  2) The feedback is stopped
-//  3) The voltage is off
 function makeCurrentCalibration()
 {
     dim.send("BIAS_CONTROL/SET_ZERO_VOLTAGE");
@@ -282,15 +190,11 @@ v8.timeout(5000, function() { if (dim.state("GPS_CONTROL").name!="Connected") re
 if (dim.state("GPS_CONTROL").name=="Disabled")
     dim.send("GPS_CONTROL/ENABLE");
 
-// Wait for gps to be enabled and locked
 dim.wait("GPS_CONTROL", "Locked", 15000);
 
 // ================================================================
 // Crosscheck all states
 // ================================================================
-
-// FIXME: Check if there is a startup scheduled, if not do not force
-// drive to be switched on
 
 var table =
 [
@@ -321,7 +225,6 @@ var table =
  [ "SQM_CONTROL",         [ "Valid" ] ],
  [ "PFMINI_CONTROL",      [ "Receiving" ] ],
 ];
-
 
 
 if (!checkStates(table))
