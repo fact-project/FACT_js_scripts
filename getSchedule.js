@@ -42,7 +42,6 @@ function getSchedule()
 
     var schedule = [];
     var entry    = -1;
-    var sub      =  0;
 
     for (var i=0; i<rows.length; i++)
     {
