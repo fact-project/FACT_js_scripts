@@ -217,7 +217,6 @@ var table =
  [ "RATE_SCAN",           [ "Connected"                       ] ],
  [ "RATE_CONTROL",        [ "Connected"                       ] ],
  [ "DRIVE_CONTROL",       [ "Initialized", "Tracking", "OnTrack", "Locked" ] ],
-// [ "LID_CONTROL",         [ "Open", "Closed"                  ] ],
  [ "LID_CONTROL",         [ "Open", "Closed", "Inconsistent", "PowerProblem"  ] ],
  [ "FTM_CONTROL",         [ "Valid", "TriggerOn"              ] ],
  [ "FAD_CONTROL",         [ "Connected", "WritingData"        ] ],
