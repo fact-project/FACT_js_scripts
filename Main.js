@@ -33,6 +33,7 @@ include('scripts/check_states_early_not_sure_how_to_name_this.js');
 include('scripts/check_power_on_time.js');
 include('scripts/do_power_on_drive.js');
 include('scripts/do_bias_calibration_if_needed.js');
+include('scripts/do_assert_gps_is_locked.js');
 
 
 
@@ -75,25 +76,7 @@ check_power_on_time();
 do_power_on_drive();
 
 do_bias_calibration_if_needed();
-// ================================================================
-// Setup GPS control and wait for the satellites to be locked
-// ================================================================
-
-checkSend(["GPS_CONTROL"]);
-
-if (dim.state("GPS_CONTROL").name=="Disconnected")
-    dim.send("GPS_CONTROL/RECONNECT");
-
-// Wait for being connectes
-v8.timeout(5000, function() { if (dim.state("GPS_CONTROL").name!="Disconnected") return true; });
-
-// Wait for status available
-v8.timeout(5000, function() { if (dim.state("GPS_CONTROL").name!="Connected") return true; });
-
-if (dim.state("GPS_CONTROL").name=="Disabled")
-    dim.send("GPS_CONTROL/ENABLE");
-
-dim.wait("GPS_CONTROL", "Locked", 15000);
+do_assert_gps_is_locked();
 
 // ================================================================
 // Crosscheck all states
