@@ -888,19 +888,6 @@ while (!processIrq())
 
     datalogger_subscriptions.check();
 
-    // If this is an observation which needs the voltage to be swicthed on
-    // skip that if the voltage is not stable
-    /*
-    if (obs[sub].task=="DATA" || obs[sub].task=="RATESCAN")
-    {
-        var state = dim.state("FEEDBACK").name;
-        if (state=="Warning" || state=="Critical" || state=="OnStandby")
-        {
-            v8.sleep(1000);
-            continue;
-        }
-    }*/
-
 
     // Check if obs.task is one of the one-time-tasks
     switch (obs[sub].task)
