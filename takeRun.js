@@ -36,14 +36,14 @@ sub_incomplete.onchange = function(evt)
  * reconnect to problematic FADs
  *
  * Dis- and Reconnects to FADs, found to be problematic by call-back function
- * onchange() to have a different CONNECTION value than 66 or 67. 
- * 
+ * onchange() to have a different CONNECTION value than 66 or 67.
+ *
  * @returns
- *      a boolean is returned. 
+ *      a boolean is returned.
  *      reconnect returns true if:
  *          * nothing needed to be reset --> no problems found by onchange()
  *          * the reconnection went fine.
- *      
+ *
  *      reconnect *never returns false* so far.
  *
  * @example
@@ -51,21 +51,7 @@ sub_incomplete.onchange = function(evt)
  *          exit();
  */
 function reconnect(list, txt)
-{ /*
-    var reset = [ ];
-
-    for (var i=0; i<list.length; i++)
-        {
-            console.out("  FAD %2d".$(list[i])+" lost during "+txt);
-            reset.push(parseInt(list[i]/10));
-        }
-
-    reset = reset.filter(function(elem,pos){return reset.indexOf(elem)==pos;});
-
-    console.out("");
-    console.out("  FADs belong to crate(s): "+reset);
-    console.out("");
-*/
+{
     console.out("");
     dim.log("Trying automatic reconnect ["+txt+",n="+list.length+"]...");
 
@@ -144,17 +130,17 @@ function takeRun(type, count, time, func)
     //          --> this time should be pretty identical for each run
     //      if this takes longer than say 3s:
     //          there might be a problem with one/more FADs
-    //    
+    //
     //      wait until "TakingData":
-    //          --> this seems to take even some minutes sometimes... 
+    //          --> this seems to take even some minutes sometimes...
     //              (might be optimized rather soon, but still in the moment...)
-    //      if this takes way too long: 
-    //          there might be something broken, 
+    //      if this takes way too long:
+    //          there might be something broken,
     //          so maybe a very high time limit is ok here.
-    //          I think there is not much that can go wrong, 
-    //          when the Thr-Calib has already started. Still it might be nice 
-    //          If in the future RateControl is written so to find out that 
-    //          in case the threshold finding algorithm does 
+    //          I think there is not much that can go wrong,
+    //          when the Thr-Calib has already started. Still it might be nice
+    //          If in the future RateControl is written so to find out that
+    //          in case the threshold finding algorithm does
     //          *not converge as usual*
     //          it can complain, and in this way give a hint, that the weather
     //          might be a little bit too bad.
@@ -163,7 +149,7 @@ function takeRun(type, count, time, func)
     //          --> in a non-data run this time should be pretty short again
     //      if this takes longer than say 3s:
     //          there might be a problem with one/more FADs
-    //  
+    //
 
     // Use this if you use the rate control to calibrate by rates
     //if (!dim.wait("MCP", "TakingData", -300000) )
