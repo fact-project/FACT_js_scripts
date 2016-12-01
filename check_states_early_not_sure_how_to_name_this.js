@@ -57,3 +57,44 @@ function check_states_later_before_data_taking_maybe()
     }
 
 }
+
+function check_states_again(power_states, drive_states){
+   // A scheduled task was found, lets check if all servers are
+    // still on and in reasonable states. If this is not the case,
+    // something unexpected must have happend and the script is aborted.
+
+
+    if (!checkStates([
+         [ "TNG_WEATHER"   ],
+         [ "MAGIC_WEATHER" ],
+         [ "CHAT"          ],
+         [ "SMART_FACT"    ],
+         [ "TEMPERATURE"   ],
+         [ "DATA_LOGGER",         [ "NightlyFileOpen", "WaitForRun", "Logging" ] ],
+         [ "FSC_CONTROL",         [ "Connected"                ] ],
+         [ "MCP",                 [ "Idle"                     ] ],
+         [ "TIME_CHECK",          [ "Valid"                    ] ],
+         [ "PWR_CONTROL",         power_states/*[ "SystemOn"                 ]*/ ],
+         [ "AGILENT_CONTROL_24V", [ "VoltageOn"                ] ],
+         [ "AGILENT_CONTROL_50V", [ "VoltageOn"                ] ],
+         [ "AGILENT_CONTROL_80V", [ "VoltageOn"                ] ],
+         [ "BIAS_CONTROL",        [ "VoltageOff", "VoltageOn", "Ramping" ] ],
+         [ "FEEDBACK",            [ "Calibrated", "InProgress", "OnStandby", "Warning", "Critical" ] ],
+//         [ "LID_CONTROL",         [ "Open", "Closed"           ] ],
+//         [ "LID_CONTROL",         [ "Open", "Closed", "Inconsistent"  ] ], HOTFIX because of connection problems with the lid arduino. See: https://www.fact-project.org/logbook/showthread.php?tid=4402&page=2
+         [ "DRIVE_CONTROL",       drive_states/*[ "Armed", "Tracking", "OnTrack" ]*/ ],
+         [ "FTM_CONTROL",         [ "Valid", "TriggerOn"       ] ],
+         [ "FAD_CONTROL",         [ "Connected", "RunInProgress" ] ],
+         [ "RATE_SCAN",           [ "Connected"                ] ],
+         [ "RATE_CONTROL",        [ "Connected", "GlobalThresholdSet", "InProgress"  ] ],
+         [ "GPS_CONTROL",         [ "Locked"  ] ],
+         [ "SQM_CONTROL",         [ "Disconnected", "Connected", "Valid" ] ],
+         [ "PFMINI_CONTROL",      [ "Disconnected", "Connected", "Receiving" ] ],
+        ]))
+    {
+        throw new Error("Something unexpected has happened. One of the servers "+
+                        "is in a state in which it should not be. Please,"+
+                        "try to find out what happened...");
+    }
+
+}
