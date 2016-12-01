@@ -73,35 +73,15 @@ function Feedback(){
         if (isOn)
             dim.log("Voltage off.");
     }
-    // DN:  The name of the method voltageOn() in the context of the method
-    //      voltageOff() is a little bit misleading, since when voltageOff() returns
-    //      the caller can be sure the voltage is off, but when voltageOn() return
-    //      this is not the case, in the sense, that the caller can now take data.
-    //      instead the caller of voltageOn() *must* call waitForVoltageOn() afterwards
-    //      in order to safely take good-quality data.
-    //      This could lead to nasty bugs in the sense, that the second call might
-    //      be forgotten by somebody
-    //
-    //      so I suggest to rename voltageOn() --> prepareVoltageOn()
-    //      waitForVoltageOn() stays as it is
-    //      and one creates a third method called:voltageOn() like this
-    /*      service_feedback.voltageOn = function()
-     *      {
-     *          this.prepareVoltageOn();
-     *          this.waitForVoltageOn();
-     *      }
-     *
-     * */
-    //      For convenience.
 
     service_feedback.voltageOn = function(ov)
     {
         if (isNaN(ov))
             ov = 1.1;
 
-        if (this.ov!=ov && dim.state("FEEDBACK").name=="InProgress") // FIXME: Warning, OnStandby, Critical if (ov<this.ov)
+        if (this.ov!=ov && dim.state("FEEDBACK").name=="InProgress")
         {
-            dim.log("Stoping feedback.");
+            dim.log("Stopping feedback.");
             if (dim.state("FTM_CONTROL").name=="TriggerOn")
             {
                 dim.send("FTM_CONTROL/STOP_TRIGGER");
@@ -110,7 +90,6 @@ function Feedback(){
 
             dim.send("FEEDBACK/STOP");
             dim.wait("FEEDBACK", "Calibrated", 3000);
-
             // Make sure we are not in Ramping anymore
             dim.wait("BIAS_CONTROL", "VoltageOn", 3000);
         }
@@ -121,21 +100,15 @@ function Feedback(){
             dim.log("Switching voltage to Uov="+ov+"V.");
 
             dim.send("FEEDBACK/START", ov);
-
-            // FIXME: We could miss "InProgress" if it immediately changes to "Warning"
-            //        Maybe a dim.timeout state>8 ?
             dim.wait("FEEDBACK", "InProgress", 45000);
-
             this.ov = ov;
         }
 
-        // Wait until voltage on
-        dim.wait("BIAS_CONTROL", "VoltageOn", 60000); // FIXME: 30000?
+        dim.wait("BIAS_CONTROL", "VoltageOn", 60000);
     }
 
-    service_feedback.waitForVoltageOn = function()
+    service_feedback.waitForVoltageOn = function(irq)
     {
-        // Avoid output if condition is already fulfilled
         dim.log("Waiting for voltage to be stable.");
 
         function func()
@@ -148,7 +121,7 @@ function Feedback(){
 
         this.last = undefined;
         this.ok = false;
-        v8.timeout(4*60000, func, this); // FIMXE: Remove 4!
+        v8.timeout(4*60000, func, this);
         this.ok = undefined;
 
         if (irq)
