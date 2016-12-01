@@ -1438,10 +1438,3 @@ while (!processIrq())
 sub_drsruns.close();
 
 dim.log("Left main loop [irq="+irq+"]");
-
-// ================================================================
-// Comments and ToDo goes here
-// ================================================================
-
-// error handline : http://www.sitepoint.com/exceptional-exception-handling-in-javascript/
-// classes: http://www.phpied.com/3-ways-to-define-a-javascript-class/
