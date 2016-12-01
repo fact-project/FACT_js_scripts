@@ -463,52 +463,6 @@ function Shutdown(type)
 
 
 // ================================================================
-//  Function to set the system to sleep-mode
-// ================================================================
-// FIXME: do not repeat code from shutdown-function
-/*
-function GoToSleep()
-{
-    CloseLid();
-
-    var isArmed = dim.state("DRIVE_CONTROL").name=="Armed";
-    if (!isArmed)
-    {
-        dim.log("Drive not ready to move. -> send STOP");
-        dim.send("DRIVE_CONTROL/STOP");
-        dim.wait("DRIVE_CONTROL", "Armed", 5000);
-    }
-
-    dim.send("DRIVE_CONTROL/MOVE_TO 101 0");//park position
-    var sub = new Subscription("DRIVE_CONTROL/POINTING_POSITION");
-    sub.get(5000);  // FIXME: Proper error message in case of failure
-
-    function func()
-    {
-        var report = sub.get();
-
-        var zd = report.obj['Zd'];
-        var az = report.obj['Az'];
-
-        if (zd>100 && Math.abs(az)<1)
-            return true;
-
-        return undefined;
-    }
-
-    try { v8.timeout(150000, func); }
-    catch (e)
-    {
-        var p = sub.get();
-        dim.log('Park position not reached? Telescope at Zd='+p.obj['Zd']+' Az='+p.obj['Az']);
-    }
-    var p2 = sub.get();
-    dim.log('Telescope at Zd=%.1fdeg Az=%.1fdeg'.$(p2.obj['Zd'], p2.obj['Az']));
-    sub.close();
-}
-*/
-
-// ================================================================
 // Check datalogger subscriptions
 // ================================================================
 
