@@ -59,7 +59,6 @@ function Observation(obj)
             rc += "["+this.sub+"]";
             if (this.source)
                 rc += ": " + this.source;
-            //rc += " ["+this.start.toUTCString()+"]";
             return rc;
         }
 
