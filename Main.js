@@ -31,6 +31,7 @@ include('scripts/print.js');
 include('scripts/do_trigger_off_if_on.js');
 include('scripts/check_states_early_not_sure_how_to_name_this.js');
 include('scripts/check_power_on_time.js');
+include('scripts/do_power_on_drive.js');
 
 
 var irq;
@@ -79,27 +80,7 @@ do_trigger_off_if_on();
 check_states_early_not_sure_how_to_name_this();
 check_power_on_time();
 
-// ================================================================
-// Power on drive system if power is off (do it hre to make sure not
-// everything is switchd on at the same time)
-// ================================================================
-
-
-if ((dim.state("PWR_CONTROL").index&16)==0)
-{
-    console.out("Drive cabinet not powered... Switching on.");
-    dim.send("PWR_CONTROL/TOGGLE_DRIVE");
-    v8.timeout(5000, function() { if (dim.state("PWR_CONTROL").index&16) return true; });
-}
-
-
-checkSend(["DRIVE_CONTROL"]);
-var loop;
-loop = new Handler("ArmDrive");
-loop.add(handleDriveArmed);
-loop.run();
-
-
+do_power_on_drive();
 // ================================================================
 // Bias crate calibration
 // ================================================================
