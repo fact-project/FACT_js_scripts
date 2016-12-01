@@ -1,14 +1,23 @@
 function getSchedule()
 {
     // List of all available measurement types (see also Observation_class.js)
-    var measurementType = [ "STARTUP", "IDLE", "DRSCALIB", "SINGLEPE", "DATA", "RATESCAN", "SHUTDOWN", "OVTEST", "RATESCAN2", "SLEEP", "CUSTOM" ];
-
-    // Get current time
-    var start = new Date();//new Date("2013-04-07 19:00:00 UTC");
+    var measurementType = [
+        "STARTUP",
+        "IDLE",
+        "DRSCALIB",
+        "SINGLEPE",
+        "DATA",
+        "RATESCAN",
+        "SHUTDOWN",
+        "OVTEST",
+        "RATESCAN2",
+        "SLEEP",
+        "CUSTOM" ];
 
     // Because Main.js could start a new observations just in the moment between 'now'
     // and entering the new data in the database, we have to use the unique id
     // in Main.js to check if the current observation should be changed (and sub resetted)
+    var start = new Date();
     start = new Date(start.getTime()-10*3600000);
 
     // ----------------------------------------------------------------------
@@ -20,7 +29,11 @@ function getSchedule()
     var sources = db.query("SELECT * from Source");
 
     // Get the current schedule
-    var rows = db.query("SELECT * FROM Schedule WHERE fStart>'"+start.toISOString()+"' ORDER BY fStart, fMeasurementID");
+    var rows = db.query(
+        "SELECT * FROM Schedule WHERE fStart>'"
+        + start.toISOString()
+        + "' ORDER BY fStart, fMeasurementID"
+        );
 
     // Close db connection
     db.close();
