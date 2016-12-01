@@ -28,10 +28,8 @@ function get_sources_by_key(){
     return sources_by_key;
 }
 
-function getSchedule()
-{
-    var measurementName_by_key = get_measurementName_by_key();
-    var sources_by_key = get_sources_by_key();
+function get_schedule_list_from_db(){
+    var db = new Database($['schedule-database']);
 
     // Because Main.js could start a new observations just in the moment between 'now'
     // and entering the new data in the database, we have to use the unique id
@@ -49,8 +47,23 @@ function getSchedule()
 
     // Close db connection
     db.close();
+    return rows
+}
 
-    // ----------------------------------------------------------------------
+function jsonify_schedule_fData(string){
+    var obj = {};
+    if (string)
+    {
+        obj = JSON.parse(("{"+string+"}").replace(/\ /g, "").replace(/(\w+):/gi, "\"$1\":"));
+    }
+    return obj
+}
+
+function getSchedule()
+{
+    var measurementName_by_key = get_measurementName_by_key();
+    var sources_by_key = get_sources_by_key();
+    var rows = get_schedule_list_from_db();
 
     var schedule = [];
     var entry    = -1;
@@ -68,12 +81,9 @@ function getSchedule()
 
         if (row.fSourceKey)
             m.source = sources_by_key[row.fSourceKey];
-        if (row.fData)
-        {
-            var obj = JSON.parse(("{"+row.fData+"}").replace(/\ /g, "").replace(/(\w+):/gi, "\"$1\":"));
-            for (var key in obj)
-                m[key] = obj[key];
-        }
+        var extra_data = jsonify_schedule_fData(row.fData);
+        for (var key in extra_data)
+            m[key] = obj[key];
 
         if (!schedule[entry])
             schedule[entry] = { };
