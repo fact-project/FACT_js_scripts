@@ -99,7 +99,7 @@ function Shutdown(type)
 
         // The voltage must be on
         service_feedback.voltageOn();
-        service_feedback.waitForVoltageOn();
+        service_feedback.waitForVoltageOn(irq);
 
         // Before we can switch to 3000 we have to make the right DRS calibration
         dim.log("Taking single p.e. run.");
@@ -1198,7 +1198,7 @@ while (!processIrq())
             break;
 
         service_feedback.voltageOn();
-        service_feedback.waitForVoltageOn();
+        service_feedback.waitForVoltageOn(irq);
 
         // Before we can switch to 3000 we have to make the right DRS calibration
         dim.log("Taking single p.e. run.");
@@ -1245,7 +1245,7 @@ while (!processIrq())
 
         // The voltage must be on
         service_feedback.voltageOn();
-        service_feedback.waitForVoltageOn();
+        service_feedback.waitForVoltageOn(irq);
 
         // Before we can switch to 3000 we have to make the right DRS calibration
         dim.log("Taking single p.e. run.");
@@ -1285,7 +1285,7 @@ while (!processIrq())
 
         // The voltage must be on
         service_feedback.voltageOn(0.4);
-        service_feedback.waitForVoltageOn();
+        service_feedback.waitForVoltageOn(irq);
 
         dim.log("Taking single p.e. run (0.4V)");
         while (!irq && !takeRun("single-pe", 10000));
@@ -1298,7 +1298,7 @@ while (!processIrq())
             dim.send("FEEDBACK/START", i*0.1);
             dim.wait("FEEDBACK", "InProgress", 45000);
             dim.wait("BIAS_CONTROL", "VoltageOn", 60000); // FIXME: 30000?
-            service_feedback.waitForVoltageOn();
+            service_feedback.waitForVoltageOn(irq);
             dim.log("Taking single p.e. run ("+(i*0.1)+"V)");
             while (!irq && !takeRun("single-pe", 10000));
         }
@@ -1339,7 +1339,7 @@ while (!processIrq())
         // Now tracking stable, switch voltage to nominal level and wait
         // for stability.
         service_feedback.voltageOn();
-        service_feedback.waitForVoltageOn();
+        service_feedback.waitForVoltageOn(irq);
 
         if (!irq)
         {
@@ -1439,7 +1439,7 @@ while (!processIrq())
         if (obs[sub].rstype!="dark-bias-off")
         {
             service_feedback.voltageOn();
-            service_feedback.waitForVoltageOn();
+            service_feedback.waitForVoltageOn(irq);
         }
 
         if (!irq)
@@ -1535,7 +1535,7 @@ while (!processIrq())
         if (obs[sub].biason)
         {
             service_feedback.voltageOn();
-            service_feedback.waitForVoltageOn();
+            service_feedback.waitForVoltageOn(irq);
         }
 
         if (!irq)
@@ -1664,7 +1664,7 @@ while (!processIrq())
         // Now we are 'OnTrack', so we can ramp to nominal voltage
         // and wait for the feedback to get stable
         service_feedback.voltageOn();
-        service_feedback.waitForVoltageOn();
+        service_feedback.waitForVoltageOn(irq);
 
         // If pointing had changed, do calibration
         if (!irq && point)
