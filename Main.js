@@ -714,7 +714,7 @@ sub_startrun.get(5000);
 
 var incomplete = 0;
 include('scripts/takeRun.js');
-
+sub_incomplete.onchange = FadIncomplete_onchange_function;
 // ----------------------------------------------------------------
 // Check that everything we need is availabel to receive commands
 // (FIXME: Should that go to the general CheckState?)

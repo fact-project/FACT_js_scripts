@@ -121,6 +121,7 @@ if (1)//diff>8 && now.getHours()>16 || runs.time<power)
 
     var incomplete = 0;
     include('scripts/takeRun.js');
+    sub_incomplete.onchange = FadIncomplete_onchange_function;
 
     while (1)
     {

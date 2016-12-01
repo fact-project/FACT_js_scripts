@@ -3,7 +3,9 @@
 // ================================================================
 //  Code related to monitoring the fad system
 // ================================================================
-sub_incomplete.onchange = function(evt)
+
+
+function FadIncomplete_onchange_function(evt)
 {
     if (!evt.data)
         return;
@@ -24,6 +26,7 @@ sub_incomplete.onchange = function(evt)
     incomplete = inc;
     dim.send("MCP/STOP");
 }
+
 
 // ================================================================
 //  Code related to taking data
