@@ -28,7 +28,8 @@ include('scripts/datalogger.js');
 include('scripts/doCheckFtuConnection.js');
 var irq;
 include('scripts/irq_setting_functions.js');
-
+include('scripts/do_trigger_off_if_on.js');
+include('scripts/check_states_early_not_sure_how_to_name_this.js');
 
 include('scripts/Func.js');
 
@@ -69,35 +70,9 @@ doCheckClockConditioner();
 // ----------------------------------------------------------------
 
 
-console.out(("\n%78s".$("")).replace(/ /g, "="));
-
-if (dim.state("FTM_CONTROL").name=="TriggerOn")
-{
-    dim.send("FTM_CONTROL/STOP_TRIGGER");
-    dim.wait("FTM_CONTROL", "Valid");
-}
-
-
-
-var table =
-[
- [ "MCP",                 [ "Idle"      ] ],
- [ "AGILENT_CONTROL_24V", [ "VoltageOn" ] ],
- [ "AGILENT_CONTROL_50V", [ "VoltageOn" ] ],
- [ "AGILENT_CONTROL_80V", [ "VoltageOn" ] ],
- [ "FTM_CONTROL",         [ "Valid"     ] ],
- [ "FAD_CONTROL",         [ "Connected",    "RunInProgress"   ] ],
- [ "BIAS_CONTROL",        [ "Disconnected", "VoltageOff"      ] ],
- [ "DATA_LOGGER",         [ "WaitForRun",   "NightlyFileOpen", "Logging" ] ],
-];
-
-console.out("Checking states.");
-if (!checkStates(table))
-{
-    throw new Error("Something unexpected has happened. One of the servers",
-            "is in a state in which it should not be. Please,",
-            "try to find out what happened...");
-}
+print_line_of_equal_signs();
+do_trigger_off_if_on();
+check_states_early_not_sure_how_to_name_this();
 
 // ===================================================================
 

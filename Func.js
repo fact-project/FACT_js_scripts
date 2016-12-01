@@ -1,3 +1,6 @@
+'use strict';
+
+
 var Func = function() { };
 Func.sum = function(a, b) { return a+b; }
 Func.sq  = function(a, b) { return Math.sqrt(a*a + b*b); }
