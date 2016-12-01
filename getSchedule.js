@@ -45,8 +45,8 @@ function getSchedule()
 
     for (var i=0; i<rows.length; i++)
     {
-        var sub = rows[i]['fMeasurementID'];
-        if (sub==0)
+        var measurement_id = rows[i]['fMeasurementID'];
+        if (measurement_id == 0)
             entry++;
 
         var m = { }
@@ -82,7 +82,7 @@ function getSchedule()
         if (!schedule[entry].measurements)
             schedule[entry].measurements = [];
 
-        schedule[entry].measurements[sub] = m;
+        schedule[entry].measurements[measurement_id] = m;
     }
 
     for (var i=0; i<schedule.length; i++)
