@@ -126,7 +126,7 @@ var nextId;
 var sun = Sun.horizon(-12);
 var system_on;  // undefined
 
-while (!processIrq())
+while (!processIrq(service_feedback, irq))
 {
     // Check if observation position is still valid
     // If source position has changed, set run=0
