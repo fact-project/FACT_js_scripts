@@ -19,7 +19,7 @@ include('scripts/Hist1D.js');
 include('scripts/Hist2D.js');
 include('scripts/takeRun.js');
 include("scripts/handleDriveArmed.js");
-
+include('scripts/doDrsCalibration.js');
 
 dim.log("Start: "+__FILE__+" ["+__DATE__+"]");
 
@@ -32,13 +32,10 @@ dim.log("Start: "+__FILE__+" ["+__DATE__+"]");
 if (!$['schedule-database'])
     throw new Error("Environment 'schedule-database' not set!");
 
-//dimctrl.defineState(37, "TimeOutBeforeTakingData", "MCP took more than 5minutes to start TakingData");
 
 // ================================================================
 //  Code related to the schedule
 // ================================================================
-
-//this is just the class implementation of 'Observation'
 
 var observations = [ ];
 
@@ -48,58 +45,7 @@ var observations = [ ];
 
 var irq;
 
-function doDrsCalibration(where)
-{
-    dim.log("Starting DRS calibration ["+where+"]");
 
-    service_feedback.voltageOff();
-
-    var tm = new Date();
-
-    while (!irq)
-    {
-        dim.send("FAD_CONTROL/START_DRS_CALIBRATION");
-        if (irq || !takeRun("drs-pedestal", 1000))     // 40 / 20s     (50Hz)
-            continue;
-
-        if (irq || !takeRun("drs-gain",     1000))     // 40 / 20s     (50Hz)
-            continue;
-
-        if (where!="data")
-        {
-            if (irq || !takeRun("drs-pedestal", 1000))     // 40 / 20s     (50Hz)
-                continue;
-        }
-
-        break;
-    }
-
-    if (where!="data")
-    {
-        dim.send("FAD_CONTROL/SET_FILE_FORMAT", 6);
-
-        while (!irq && !takeRun("drs-pedestal", 1000));     // 40 / 20s     (50Hz)
-        while (!irq && !takeRun("drs-time",     1000));     // 40 / 20s     (50Hz)
-    }
-
-    while (!irq)
-    {
-        dim.send("FAD_CONTROL/RESET_SECONDARY_DRS_BASELINE");
-        if (takeRun("pedestal",     1000))              // 40 / 10s     (80Hz)
-            break;
-    }
-
-    dim.send("FAD_CONTROL/SET_FILE_FORMAT", 6);
-
-    while (!irq && !takeRun("pedestal",     1000));     // 40 / 10s     (80Hz)
-    //                                                   -----------
-    //                                                   4'40 / 2'00
-
-    if (irq)
-        dim.log("DRS calibration interrupted [%.1fs]".$((new Date()-tm)/1000));
-    else
-        dim.log("DRS calibration done [%.1fs]".$((new Date()-tm)/1000));
-}
 
 // ================================================================
 //  Code related to the lid
@@ -1497,7 +1443,7 @@ while (!processIrq())
     case "STARTUP":
         CloseLid();
 
-        doDrsCalibration("startup");  // will switch the voltage off
+        doDrsCalibration(irq, "startup");  // will switch the voltage off
 
         if (irq)
             break;
@@ -1530,7 +1476,7 @@ while (!processIrq())
         continue;
 
     case "DRSCALIB":
-        doDrsCalibration("drscalib");  // will switch the voltage off
+        doDrsCalibration(irq, "drscalib");  // will switch the voltage off
         dim.log("Task finished [DRSCALIB]");
         console.out("");
         break;
@@ -1583,7 +1529,7 @@ while (!processIrq())
         var diff = getTimeSinceLastDrsCalib();
         if (diff>30 || diff==null)
         {
-            doDrsCalibration("ovtest");  // will turn voltage off
+            doDrsCalibration(irq, "ovtest");  // will turn voltage off
             if (irq)
                 break;
         }
@@ -1938,7 +1884,7 @@ while (!processIrq())
 
         if (drscal)
         {
-            doDrsCalibration("data");  // will turn voltage off
+            doDrsCalibration(irq, "data");  // will turn voltage off
 
             // Now we switch on the voltage and a significant amount of
             // time has been passed, so do the check again.
