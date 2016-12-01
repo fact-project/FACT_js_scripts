@@ -3,6 +3,23 @@
  * @author <a href="mailto:thomas.bretz@epfl.ch">Thomas Bretz</a>
  */
 'use strict';
+include('scripts/Observation_class.js');
+include('scripts/getSchedule.js');
+include("scripts/Handler.js");
+include("scripts/CheckStates.js");
+include("scripts/handlePwrCameraOn.js");
+include("scripts/handleBiasVoltageOff.js");
+include("scripts/handleFtmIdle.js");
+include("scripts/handleFscConnected.js");
+include("scripts/handleFeedbackConnected.js");
+include("scripts/handleRatectrlConnected.js");
+include("scripts/handleLidClosed.js");
+include("scripts/handleFadConnected.js");
+include('scripts/Hist1D.js');
+include('scripts/Hist2D.js');
+include('scripts/takeRun.js');
+include("scripts/handleDriveArmed.js");
+
 
 dim.log("Start: "+__FILE__+" ["+__DATE__+"]");
 
@@ -22,8 +39,6 @@ if (!$['schedule-database'])
 // ================================================================
 
 //this is just the class implementation of 'Observation'
-include('scripts/Observation_class.js');
-include('scripts/getSchedule.js');
 
 var observations = [ ];
 
@@ -692,13 +707,10 @@ console.out("");
 dim.alarm();
 
 var loop;
-include("scripts/Handler.js");
-include("scripts/CheckStates.js");
 
 // -----------------------------------------------------------------
 // Make sure camera electronics is switched on and has power
 // -----------------------------------------------------------------
-include("scripts/handlePwrCameraOn.js");
 checkSend(["PWR_CONTROL"]);
 loop = new Handler("PowerOn");
 loop.add(handlePwrCameraOn);
@@ -711,13 +723,6 @@ console.out("");
 // trigger is switched off)
 // -----------------------------------------------------------------
 
-include("scripts/handleBiasVoltageOff.js");
-include("scripts/handleFtmIdle.js");
-include("scripts/handleFscConnected.js");
-include("scripts/handleFeedbackConnected.js");
-include("scripts/handleRatectrlConnected.js");
-include("scripts/handleLidClosed.js");
-include("scripts/handleFadConnected.js");
 
 checkSend(["BIAS_CONTROL","FAD_CONTROL","FTM_CONTROL", "FSC_CONTROL", "FEEDBACK", "RATE_CONTROL", "MCP"]);
 
@@ -853,7 +858,6 @@ if (dim.state("FTM_CONTROL").name=="TriggerOn")
 }
 
 
-include('scripts/CheckStates.js');
 
 var table =
 [
@@ -877,8 +881,6 @@ if (!checkStates(table))
 
 // ===================================================================
 
-include('scripts/Hist1D.js');
-include('scripts/Hist2D.js');
 
 console.out("Checking power on time");
 
@@ -939,7 +941,7 @@ if (1)//diff>8 && now.getHours()>16 || runs.time<power)
     sub_startrun.get(5000);
 
     var incomplete = 0;
-    include('scripts/takeRun.js');
+
     sub_incomplete.onchange = FadIncomplete_onchange_function;
 
     while (1)
@@ -1078,7 +1080,6 @@ if ((dim.state("PWR_CONTROL").index&16)==0)
     v8.timeout(5000, function() { if (dim.state("PWR_CONTROL").index&16) return true; });
 }
 
-include("scripts/handleDriveArmed.js");
 
 checkSend(["DRIVE_CONTROL"]);
 
@@ -1226,7 +1227,7 @@ var sub_startrun = new Subscription("FAD_CONTROL/START_RUN");
 sub_startrun.get(5000);
 
 var incomplete = 0;
-include('scripts/takeRun.js');
+
 sub_incomplete.onchange = FadIncomplete_onchange_function;
 // ----------------------------------------------------------------
 // Check that everything we need is availabel to receive commands
