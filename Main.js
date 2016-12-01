@@ -600,16 +600,6 @@ while (!processIrq(service_feedback, irq))
     case "DATA":
 
         // ========================== case "DATA" ============================
-    /*
-        if (Sun.horizon("FACT").isUp)
-        {
-            console.out("  SHUTDOWN","");
-            Shutdown();
-            console.out("  Exit forced due to broken schedule", "");
-            exit();
-        }
-    */
-
         // Calculate remaining time for this observation in minutes
         var remaining = nextObs==undefined ? 0 : (nextObs.start-new Date())/60000;
         //dim.log("DEBUG: remaining: "+remaining+" nextObs="+nextObs+" start="+nextObs.start);
@@ -709,8 +699,6 @@ while (!processIrq(service_feedback, irq))
             {
                 if (irq || !takeRun("pedestal",         1000))  // 80 Hz  -> 10s
                     continue;
-//                if (irq || !takeRun("light-pulser-ext", 1000))  // 80 Hz  -> 10s
-//                    continue;
                 break;
             }
         }
