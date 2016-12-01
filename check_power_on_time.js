@@ -1,35 +1,6 @@
 'use strict';
 
-function check_power_on_time(){
-    console.out("Checking power on time");
-
-    var service_drs = new Subscription("FAD_CONTROL/DRS_RUNS");
-
-    var runs = service_drs.get(5000, false);
-
-
-    var power = dim.state("AGILENT_CONTROL_50V").time;
-    var now   = new Date();
-
-    var diff = (now - runs.time) / 3600000;
-
-    console.out(" * Now:                "+now);
-    console.out(" * Last power cycle:   "+power);
-    console.out(" * Last DRS calib set: "+(runs.data?runs.time:"none"));
-
-
-
-    console.out("Checking send.");
-    checkSend(["FAD_CONTROL", "MCP", "RATE_CONTROL"]);
-    console.out("Checking send: done");
-
-    //console.out("Most probablay the camera has not been checked for underflows yet.");
-
-    var service_event = new Subscription("FAD_CONTROL/EVENT_DATA");
-
-    dim.send("FAD_CONTROL/START_DRS_CALIBRATION");
-    dim.send("FAD_CONTROL/SET_FILE_FORMAT", 0);
-
+function close_open_runs_if_needed(){
     var sub_runs = new Subscription("FAD_CONTROL/RUNS");
     var sruns = sub_runs.get(5000, false);
 
@@ -46,21 +17,21 @@ function check_power_on_time(){
         // add the run number to the data we are waiting for
         v8.sleep(5000);
     }
-
     sub_runs.close();
+}
+
+function take_one_single_event(){
 
     console.out("Starting drs-gain... waiting for new event");
 
     var sub_startrun = new Subscription("FAD_CONTROL/START_RUN");
+    sub_startrun.get(5000);
     var sub_incomplete = new Subscription("FAD_CONTROL/INCOMPLETE");
+    sub_incomplete.onchange = FadIncomplete_onchange_function;
     var sub_connections = new Subscription("FAD_CONTROL/CONNECTIONS");
     sub_connections.get(5000);
-    sub_startrun.get(5000);
 
-    var incomplete = 0;
-
-    sub_incomplete.onchange = FadIncomplete_onchange_function;
-
+    var service_event = new Subscription("FAD_CONTROL/EVENT_DATA");
     while (1)
     {
         var event_counter = service_event.get(10000, false).counter;
@@ -69,7 +40,9 @@ function check_power_on_time(){
         {
             while (1)
             {
-                if (dim.state("MCP").name=="TakingData" && service_event.get(0, false).counter>event_counter)
+                if (dim.state("MCP").name=="TakingData"
+                    && service_event.get(0, false).counter > event_counter
+                    )
                 {
                     dim.send("MCP/STOP");
                     console.out("Sent MCP/STOP.");
@@ -91,10 +64,6 @@ function check_power_on_time(){
 
     console.out("Event received.");
 
-    sub_incomplete.close();
-    sub_connections.close();
-    sub_startrun.close();
-
 
     // FIXME: Restore DRS calibration in case of failure!!
     //        FAD Re-connect in case of failure?
@@ -104,13 +73,47 @@ function check_power_on_time(){
     var event = service_event.get(3000);//, false);
     service_event.close();
 
+    sub_incomplete.close();
+    sub_connections.close();
+    sub_startrun.close();
+
     console.out("Run stopped.");
 
     dim.send("RATE_CONTROL/STOP"); // GlobalThresholdSet -> Connected
     dim.wait("MCP", "Idle", 3000);
 
+    return event;
+}
+
+
+function check_power_on_time(){
+    console.out("Checking power on time");
+
+    var service_drs = new Subscription("FAD_CONTROL/DRS_RUNS");
+
+    var runs = service_drs.get(5000, false);
+
+
+    var power = dim.state("AGILENT_CONTROL_50V").time;
+    var now   = new Date();
+
+    var diff = (now - runs.time) / 3600000;
+
+    console.out(" * Now:                "+now);
+    console.out(" * Last power cycle:   "+power);
+    console.out(" * Last DRS calib set: "+(runs.data?runs.time:"none"));
+    console.out("Checking send.");
+    checkSend(["FAD_CONTROL", "MCP", "RATE_CONTROL"]);
+    console.out("Checking send: done");
+
+    dim.send("FAD_CONTROL/START_DRS_CALIBRATION");
+    dim.send("FAD_CONTROL/SET_FILE_FORMAT", 0);
+
+    close_open_runs_if_needed();
+    var event = take_one_single_event();
+
     var nn = runs.data && runs.data.length>0 && runs.obj['roi']>0 ? runs.obj['run'].reduce(Func.max) : -1;
-    if (nn>0)
+    if (nn > 0)
     {
         var night = runs.obj['night'];
 
@@ -179,9 +182,6 @@ function check_power_on_time(){
         console.warn("There is probably an underflow condition in one DRS... please check manually.");
     }
 
-
     service_drs.close();
-
-
 }
 
