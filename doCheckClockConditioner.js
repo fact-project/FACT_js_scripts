@@ -18,3 +18,9 @@ function doCheckClockConditioner(){
 
     sub_counter.close();
 }
+
+function monitor_clock_conditioner(evt)
+{
+    if (evt.qos>0 && evt.qos!=2 && evt.qos&0x100==0)
+        throw new Error("FTM reports: clock conditioner not locked.");
+}
