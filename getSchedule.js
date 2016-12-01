@@ -25,8 +25,14 @@ function getSchedule()
     // Connect to database
     var db = new Database($['schedule-database']);
 
-    // get all sources from database
-    var sources = db.query("SELECT * from Source");
+    // get all sources from database and make a map by key from the list.
+    sources_by_key = {}
+    db.query("SELECT * from Source").forEach(
+        function(source_row){
+            sources_by_key[source_row.fSourceKEY] = source_row.fSourceName
+        }
+    );
+
 
     // Get the current schedule
     var rows = db.query(
@@ -45,30 +51,20 @@ function getSchedule()
 
     for (var i=0; i<rows.length; i++)
     {
-        var measurement_id = rows[i]['fMeasurementID'];
-        if (measurement_id == 0)
+        var row = rows[i];
+
+        if (row.fMeasurementID == 0)
             entry++;
 
         var m = { }
 
-        var task = rows[i]['fMeasurementTypeKey'];
-        m.task = measurementType[task];
+        m.task = measurementType[row.fMeasurementTypeKey];
 
-        var src = rows[i]['fSourceKey'];
-        if (src)
+        if (row.fSourceKey)
+            m.source = sources_by_key[row.fSourceKey];
+        if (row.fData)
         {
-            // Convert SourceKey to SourceName
-            var arr = sources.filter(function(e) { return e['fSourceKEY']==src; });
-            if (arr.length==0)
-                throw new Error("SourceKey "+src+" unknown.");
-
-            m.source = arr[0]['fSourceName'];
-        }
-
-        var data = rows[i]['fData'];
-        if (data)
-        {
-            var obj = JSON.parse(("{"+data+"}").replace(/\ /g, "").replace(/(\w+):/gi, "\"$1\":"));
+            var obj = JSON.parse(("{"+row.fData+"}").replace(/\ /g, "").replace(/(\w+):/gi, "\"$1\":"));
             for (var key in obj)
                 m[key] = obj[key];
         }
@@ -76,13 +72,13 @@ function getSchedule()
         if (!schedule[entry])
             schedule[entry] = { };
 
-        schedule[entry].id   = rows[i]['fScheduleID'];
-        schedule[entry].date = new Date(rows[i]['fStart']+" UTC");
+        schedule[entry].id   = row.fScheduleID;
+        schedule[entry].date = new Date(row.fStart+" UTC");
 
         if (!schedule[entry].measurements)
             schedule[entry].measurements = [];
 
-        schedule[entry].measurements[measurement_id] = m;
+        schedule[entry].measurements[row.fMeasurementID] = m;
     }
 
     for (var i=0; i<schedule.length; i++)
