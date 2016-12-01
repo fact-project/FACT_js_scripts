@@ -81,8 +81,9 @@ function getSchedule()
     return schedule;
 }
 
-function get_index_of_current_observation(observations, now)
+function get_index_of_current_observation(now)
 {
+    observations = getSchedule();
     if (now==undefined)
         now = new Date();
 
