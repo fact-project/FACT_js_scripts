@@ -37,3 +37,31 @@ function handleIrq(cmd, args, time, user)
     if (dim.state("RATE_SCAN").name=="InProgress")
         dim.send("RATE_SCAN/STOP");
 }
+
+function processIrq(service_feedback, irq)
+{
+    if (!irq)
+        return false;
+
+    if (irq.toUpperCase()=="RESCHEDULE")
+    {
+        irq = undefined;
+        return false;
+    }
+
+    if (irq.toUpperCase()=="OFF")
+    {
+        service_feedback.voltageOff();
+        dim.send("FAD_CONTROL/CLOSE_OPEN_FILES");
+        return true;
+    }
+
+    if (irq.toUpperCase()=="SHUTDOWN")
+    {
+        Shutdown(service_feedback, irq);
+        return true;
+    }
+
+    dim.log("IRQ "+irq+" unhandled... stopping script.");
+    return true;
+}

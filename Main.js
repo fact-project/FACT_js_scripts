@@ -126,42 +126,6 @@ var nextId;
 var sun = Sun.horizon(-12);
 var system_on;  // undefined
 
-function processIrq()
-{
-    if (!irq)
-        return false;
-
-    if (irq.toUpperCase()=="RESCHEDULE")
-    {
-        irq = undefined;
-        return false;
-    }
-
-    if (irq.toUpperCase()=="OFF")
-    {
-        service_feedback.voltageOff();
-        dim.send("FAD_CONTROL/CLOSE_OPEN_FILES");
-        return true;
-    }
-
-    /*
-    if (irq.toUpperCase()=="STOP")
-    {
-        dim.send("FAD_CONTROL/CLOSE_OPEN_FILES");
-        dim.send("MCP/STOP");
-        return true;
-    }*/
-
-    if (irq.toUpperCase()=="SHUTDOWN")
-    {
-        Shutdown(service_feedback, irq);
-        return true;
-    }
-
-    dim.log("IRQ "+irq+" unhandled... stopping script.");
-    return true;
-}
-
 while (!processIrq())
 {
     // Check if observation position is still valid
