@@ -77,39 +77,20 @@ do_power_on_drive();
 do_bias_calibration_if_needed();
 do_assert_gps_is_locked();
 check_states_later_before_data_taking_maybe();
-// ================================================================
-//  Code to monitor clock conditioner
-// ================================================================
 
 var sub_counter = new Subscription("FTM_CONTROL/COUNTER");
 sub_counter.onchange = monitor_clock_conditioner;
 
-// ================================================================
-//  Code related to monitoring the fad system
-// ================================================================
 
-// This code is here, because scripts/Startup.js needs the
-// same subscriptions... to be revised.
-var sub_incomplete = new Subscription("FAD_CONTROL/INCOMPLETE");
 var sub_connections = new Subscription("FAD_CONTROL/CONNECTIONS");
 var sub_startrun = new Subscription("FAD_CONTROL/START_RUN");
 sub_startrun.get(5000);
 
-var incomplete = 0;
 
+var sub_incomplete = new Subscription("FAD_CONTROL/INCOMPLETE");
 sub_incomplete.onchange = FadIncomplete_onchange_function;
-// ----------------------------------------------------------------
-// Check that everything we need is availabel to receive commands
-// (FIXME: Should that go to the general CheckState?)
-// ----------------------------------------------------------------
-//console.out("Checking send.");
 checkSend(["MCP", "DRIVE_CONTROL", "LID_CONTROL", "FAD_CONTROL", "FEEDBACK"]);
-//console.out("Checking send: done");
 
-// ----------------------------------------------------------------
-// Bring feedback into the correct operational state
-// ----------------------------------------------------------------
-//console.out("Feedback init: start.");
 service_feedback.get(5000);
 
 // ----------------------------------------------------------------
