@@ -91,36 +91,7 @@ sub_incomplete.onchange = FadIncomplete_onchange_function;
 checkSend(["MCP", "DRIVE_CONTROL", "LID_CONTROL", "FAD_CONTROL", "FEEDBACK"]);
 
 service_feedback.get(5000);
-
-
-
-
-// ----------------------------------------------------------------
-// Install interrupt handler
-// ----------------------------------------------------------------
-function handleIrq(cmd, args, time, user)
-{
-    console.out("Interrupt received:");
-    console.out("  IRQ:  "+cmd);
-    console.out("  Time: "+time);
-    console.out("  User: "+user);
-
-    irq = cmd ? cmd : "stop";
-
-    // This will end a run in progress as if it where correctly stopped
-    if (dim.state("MCP").name=="TakingData")
-        dim.send("MCP/STOP");
-
-    // This will stop a rate scan in progress
-    if (dim.state("RATE_SCAN").name=="InProgress")
-        dim.send("RATE_SCAN/STOP");
-}
-
 dimctrl.setInterruptHandler(handleIrq);
-
-// ----------------------------------------------------------------
-// Make sure we will write files
-// ----------------------------------------------------------------
 dim.send("FAD_CONTROL/SET_FILE_FORMAT", 6);
 
 // ----------------------------------------------------------------
