@@ -34,8 +34,7 @@ include('scripts/check_power_on_time.js');
 include('scripts/do_power_on_drive.js');
 include('scripts/do_bias_calibration_if_needed.js');
 include('scripts/do_assert_gps_is_locked.js');
-
-
+include('scripts/getTimeSinceLastDrsCalib.js');
 
 var irq;
 include('scripts/irq_setting_functions.js');
@@ -93,32 +92,8 @@ checkSend(["MCP", "DRIVE_CONTROL", "LID_CONTROL", "FAD_CONTROL", "FEEDBACK"]);
 
 service_feedback.get(5000);
 
-// ----------------------------------------------------------------
-// Connect to the DRS_RUNS service
-// ----------------------------------------------------------------
-//console.out("Drs runs init: start.");
 
-var sub_drsruns = new Subscription("FAD_CONTROL/DRS_RUNS");
-sub_drsruns.get(5000);
-// FIXME: Check if the last DRS calibration was complete?
 
-function getTimeSinceLastDrsCalib()
-{
-    // ----- Time since last DRS Calibration [min] ------
-    var runs = sub_drsruns.get(0);
-    var diff = (new Date()-runs.time)/60000;
-
-    // Warning: 'roi=300' is a number which is not intrisically fixed
-    //          but can change depending on the taste of the observers
-    var valid = runs.obj['run'][2]>0 && runs.obj['roi']==300;
-
-    if (valid)
-        dim.log("Last DRS calibration was %.1fmin ago".$(diff));
-    else
-        dim.log("No valid DRS calibration available.");
-
-    return valid ? diff : null;
-}
 
 // ----------------------------------------------------------------
 // Install interrupt handler
@@ -932,6 +907,6 @@ while (!processIrq())
     sub++;
 }
 
-sub_drsruns.close();
+
 
 dim.log("Left main loop [irq="+irq+"]");
