@@ -10,11 +10,8 @@ include("scripts/CheckStates.js");
 // -----------------------------------------------------------------
 // Make sure camera electronics is switched on and has power
 // -----------------------------------------------------------------
-
 include("scripts/handlePwrCameraOn.js");
-
 checkSend(["PWR_CONTROL"]);
-
 loop = new Handler("PowerOn");
 loop.add(handlePwrCameraOn);
 loop.run();
