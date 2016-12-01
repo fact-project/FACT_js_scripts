@@ -46,6 +46,44 @@ function getObservation(now)
     return observations.length-1;
 }
 
+// ================================================================
+//  Code to check whether observation is allowed
+// ================================================================
+/*
+function currentEst(source)
+{
+    var moon = new Moon();
+    if (!moon.isUp)
+        return 7.7;
+
+    var dist = Sky.dist(moon, source);
+
+    var alt = 90-moon.toLocal().zd;
+
+    var lc = dist*alt*pow(Moon.disk(), 6)/360/360;
+
+    var cur = 7.7+4942*lc;
+
+    return cur;
+}
+
+function thresholdEst(source) // relative threshold (ratio)
+{
+    // Assumption:
+    // atmosphere is 70km, shower taks place after 60km, earth radius 6400km
+    // just using the cosine law
+    // This fits very well with MC results: See Roger Firpo, p.45
+    // "Study of the MAGIC telescope sensitivity for Large Zenith Angle observations"
+
+    var c = Math.cos(Math.Pi-source.zd);
+    var ratio = (10*sqrt(409600*c*c+9009) + 6400*c - 60)/10;
+
+    // assumption: Energy threshold increases linearily with current
+    // assumption: Energy threshold increases linearily with distance
+
+    return ratio*currentEst(source)/7.7;
+}
+*/
 
 // ================================================================
 //  Code to perform the DRS calib sequence
@@ -143,7 +181,8 @@ function OpenLid()
         var ret = cam.send();
         dim.log("Camera response: "+ret.data.replace(/\n/g,"/")+" ["+ret.rc+"]");
     }
-    dim.wait("LID_CONTROL", "Open", 30000);
+    //dim.wait("LID_CONTROL", "Open", 30000);
+    v8.timeout(30000, function() { if (dim.state("LID_CONTROL").name=="Open" || dim.state("LID_CONTROL").name=="PowerProblem") return true; });
 
     if (isClosed || isInconsistent)
         dim.log("Lid open [%.1fs]".$((new Date()-tm)/1000));
@@ -152,11 +191,12 @@ function OpenLid()
 function CloseLid()
 {
     var isOpen = dim.state("LID_CONTROL").name=="Open";
+    var isPowerProblem = dim.state("LID_CONTROL").name=="PowerProblem";
 
     var tm = new Date();
 
     // Wait for lid to be open
-    if (isOpen)
+    if (isOpen || isPowerProblem)
     {
         if (dim.state("FTM_CONTROL").name=="TriggerOn")
         {
@@ -171,7 +211,7 @@ function CloseLid()
     //dim.wait("LID_CONTROL", "Closed", 30000);
     //dim.wait("LID_CONTROL", "Inconsistent", 30000);
 
-    if (isOpen)
+    if (isOpen || isPowerProblem)
         dim.log("Lid closed [%.1fs]".$((new Date()-tm)/1000));
 }
 
@@ -284,9 +324,9 @@ service_feedback.voltageOff = function()
 //      this is not the case, in the sense, that the caller can now take data.
 //      instead the caller of voltageOn() *must* call waitForVoltageOn() afterwards
 //      in order to safely take good-quality data.
-//      This could lead to nasty bugs in the sense, that the second call might
+//      This could lead to nasty bugs in the sense, that the second call might 
 //      be forgotten by somebody
-//
+//      
 //      so I suggest to rename voltageOn() --> prepareVoltageOn()
 //      waitForVoltageOn() stays as it is
 //      and one creates a third method called:voltageOn() like this
@@ -295,7 +335,7 @@ service_feedback.voltageOff = function()
  *          this.prepareVoltageOn();
  *          this.waitForVoltageOn();
  *      }
- *
+ * 
  * */
 //      For convenience.
 
@@ -387,6 +427,19 @@ function Shutdown(type)
 
     console.out("","Waiting for telescope to park. This may take a while.");
 
+    // FIXME: This might not work is the drive is already close to park position
+    //dim.wait("DRIVE_CONTROL", "Parking", 3000);
+
+    /*
+    // Check if DRS calibration is necessary
+    var diff = getTimeSinceLastDrsCalib();
+    if (diff>30 || diff==null)
+    {
+        doDrsCalibration("singlepe");  // will turn voltage off
+        if (irq)
+            break;
+    }*/
+
     //take single pe run if required
     if (type=="singlepe")
     {
@@ -399,6 +452,24 @@ function Shutdown(type)
         // Before we can switch to 3000 we have to make the right DRS calibration
         dim.log("Taking single p.e. run.");
         while (!irq && !takeRun("single-pe", 10000));
+
+        /*
+         Maybe we need to send a trigger... but data runs contain pedestal triggers... so it should work in any case...
+        var customRun = function()
+            {
+                v8.sleep(500);//wait that configuration is set
+                dim.wait("FTM_CONTROL", "TriggerOn", 15000);
+                dim.send("FAD_CONTROL/SEND_SINGLE_TRIGGER");
+                dim.send("RATE_CONTROL/STOP");
+                dim.send("FTM_CONTROL/STOP_TRIGGER");
+                dim.wait("FTM_CONTROL", "Valid", 3000);
+                dim.send("FTM_CONTROL/ENABLE_TRIGGER", true);
+                dim.send("FTM_CONTROL/SET_TIME_MARKER_DELAY", 123);
+                dim.send("FTM_CONTROL/SET_THRESHOLD", -1, obs[sub].threshold);
+                v8.sleep(500);//wait that configuration is set
+                dim.send("FTM_CONTROL/START_TRIGGER");
+                dim.wait("FTM_CONTROL", "TriggerOn", 15000);
+            }*/
     }
 
     //wait until drive is in locked (after it reached park position)
@@ -461,6 +532,52 @@ function Shutdown(type)
     sub.close();
 }
 
+
+// ================================================================
+//  Function to set the system to sleep-mode
+// ================================================================
+// FIXME: do not repeat code from shutdown-function
+/*
+function GoToSleep()
+{
+    CloseLid();
+
+    var isArmed = dim.state("DRIVE_CONTROL").name=="Armed";
+    if (!isArmed)
+    {
+        dim.log("Drive not ready to move. -> send STOP");
+        dim.send("DRIVE_CONTROL/STOP");
+        dim.wait("DRIVE_CONTROL", "Armed", 5000);
+    }
+
+    dim.send("DRIVE_CONTROL/MOVE_TO 101 0");//park position
+    var sub = new Subscription("DRIVE_CONTROL/POINTING_POSITION");
+    sub.get(5000);  // FIXME: Proper error message in case of failure
+
+    function func()
+    {
+        var report = sub.get();
+
+        var zd = report.obj['Zd'];
+        var az = report.obj['Az'];
+
+        if (zd>100 && Math.abs(az)<1)
+            return true;
+
+        return undefined;
+    }
+
+    try { v8.timeout(150000, func); }
+    catch (e)
+    {
+        var p = sub.get();
+        dim.log('Park position not reached? Telescope at Zd='+p.obj['Zd']+' Az='+p.obj['Az']);
+    }
+    var p2 = sub.get();
+    dim.log('Telescope at Zd=%.1fdeg Az=%.1fdeg'.$(p2.obj['Zd'], p2.obj['Az']));
+    sub.close();
+}
+*/
 
 // ================================================================
 // Check datalogger subscriptions
@@ -745,7 +862,7 @@ while (!processIrq())
     if (idxObs==-1)
     {
         // flag that the first observation will be in the future
-        run = -1;
+        run = -1; 
         v8.sleep(1000);
         continue;
     }
@@ -867,7 +984,7 @@ while (!processIrq())
          [ "BIAS_CONTROL",        [ "VoltageOff", "VoltageOn", "Ramping" ] ],
          [ "FEEDBACK",            [ "Calibrated", "InProgress", "OnStandby", "Warning", "Critical" ] ],
 //         [ "LID_CONTROL",         [ "Open", "Closed"           ] ],
-         [ "LID_CONTROL",         [ "Open", "Closed", "Inconsistent"  ] ],
+//         [ "LID_CONTROL",         [ "Open", "Closed", "Inconsistent"  ] ], HOTFIX because of connection problems with the lid arduino. See: https://www.fact-project.org/logbook/showthread.php?tid=4402&page=2
          [ "DRIVE_CONTROL",       drive_states/*[ "Armed", "Tracking", "OnTrack" ]*/ ],
          [ "FTM_CONTROL",         [ "Valid", "TriggerOn"       ] ],
          [ "FAD_CONTROL",         [ "Connected", "RunInProgress" ] ],
@@ -882,11 +999,24 @@ while (!processIrq())
     if (!checkStates(table))
     {
         throw new Error("Something unexpected has happened. One of the servers "+
-                        "is in a state in which it should not be. Please,"+
+                        "is in a state in which it should not be. Please,"+ 
                         "try to find out what happened...");
     }
 
-    datalogger_subscriptions.check();
+    datalogger_subscriptions.check();                                         
+                                                                                
+    // If this is an observation which needs the voltage to be swicthed on
+    // skip that if the voltage is not stable                                    
+    /*
+    if (obs[sub].task=="DATA" || obs[sub].task=="RATESCAN")
+    {
+        var state = dim.state("FEEDBACK").name;
+        if (state=="Warning" || state=="Critical" || state=="OnStandby")
+        {
+            v8.sleep(1000);
+            continue;
+        }
+    }*/
 
 
     // Check if obs.task is one of the one-time-tasks
@@ -900,7 +1030,7 @@ while (!processIrq())
     case "SLEEP":
         Shutdown("sleep"); //GoToSleep();
 
-        dim.log("Task finished ["+obs[sub].task+"].");
+        dim.log("Task finished [SLEEP].");
         console.out("");
         sub++;
         continue;
@@ -1317,7 +1447,7 @@ while (!processIrq())
         //  ...when more than 15min of observation are left
         //  ...no drs calibration was done yet
         var drscal = (run%4==0 && (remaining>15 && diff>70)) || diff==null;
-
+    
         if (point)
         {
             // Switch the voltage to a reduced voltage level
@@ -1438,3 +1568,10 @@ while (!processIrq())
 sub_drsruns.close();
 
 dim.log("Left main loop [irq="+irq+"]");
+
+// ================================================================
+// Comments and ToDo goes here
+// ================================================================
+
+// error handline : http://www.sitepoint.com/exceptional-exception-handling-in-javascript/
+// classes: http://www.phpied.com/3-ways-to-define-a-javascript-class/
