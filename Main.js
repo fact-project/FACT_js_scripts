@@ -25,6 +25,9 @@ include('scripts/feedback.js');
 include('scripts/shutdown.js');
 include('scripts/datalogger.js');
 
+var irq;
+include('scripts/irq_setting_functions.js');
+
 
 dim.log("Start: "+__FILE__+" ["+__DATE__+"]");
 
@@ -37,24 +40,8 @@ dim.log("Start: "+__FILE__+" ["+__DATE__+"]");
 if (!$['schedule-database'])
     throw new Error("Environment 'schedule-database' not set!");
 
-
 var observations = [ ];
-var irq;
-
-// ================================================================
-//  Interrupt data taking in case of high currents
-// ================================================================
-dim.onchange['FEEDBACK'] = function(state)
-{
-    if ((state.name=="Critical" || state.name=="OnStandby") &&
-        (this.prev!="Critical"  && this.prev!="OnStandby"))
-    {
-        console.out("Feedback state changed from "+this.prev+" to "+state.name+" [Main.js]");
-        irq = "RESCHEDULE";
-    }
-    this.prev=state.name;
-}
-
+dim.onchange['FEEDBACK'] = reschedule_if_high_currents;
 var service_feedback = Feedback();
 var datalogger_subscriptions = Datalogger();
 
