@@ -8,7 +8,6 @@ function Handler(name)
     this.add = function(func)
     {
         this.array.push(func);
-        //console.out(this.name+":add [N="+this.array.length+"]");
     }
 
     this.run = function(timeout)
@@ -21,11 +20,6 @@ function Handler(name)
         while (!timeout || (new Date()-start)<timeout)
         {
             var done = true;
-
-            //rc = rc.map(this.array[i]);
-            //
-            //rc.forEach(function(el){ done &= el && el.length==0;);
-
             for (var i=0; i<this.array.length; i++)
             {
                 rc[i] = this.array[i](rc[i]);
