@@ -45,10 +45,6 @@ dim.onchange['FEEDBACK'] = reschedule_if_high_currents;
 var service_feedback = Feedback();
 var datalogger_subscriptions = Datalogger();
 
-// ================================================================
-// Crosscheck all states
-// ================================================================
-
 // ----------------------------------------------------------------
 // Do a standard startup to bring the system in into a well
 // defined state
@@ -56,16 +52,8 @@ var datalogger_subscriptions = Datalogger();
 console.out("");
 dim.alarm();
 
+doSwitchCameraPowerOn();
 var loop;
-
-// -----------------------------------------------------------------
-// Make sure camera electronics is switched on and has power
-// -----------------------------------------------------------------
-checkSend(["PWR_CONTROL"]);
-loop = new Handler("PowerOn");
-loop.add(handlePwrCameraOn);
-loop.run();
-console.out("");
 
 // -----------------------------------------------------------------
 // Now take care that the bias control, the ftm and the fsc are

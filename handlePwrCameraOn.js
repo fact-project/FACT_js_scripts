@@ -50,3 +50,11 @@ function handlePwrCameraOn(wait_state)
 
     throw new Error("PWR_CONTROL:"+state.name+"["+state.index+"] unknown or not handled.");
 }
+
+function doSwitchCameraPowerOn(){
+    checkSend(["PWR_CONTROL"]);
+    var loop = new Handler("PowerOn");
+    loop.add(handlePwrCameraOn);
+    loop.run();
+    console.out("");
+}
