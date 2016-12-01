@@ -1,18 +1,12 @@
 function getSchedule()
 {
     // List of all available measurement types (see also Observation_class.js)
-    var measurementType = [
-        "STARTUP",
-        "IDLE",
-        "DRSCALIB",
-        "SINGLEPE",
-        "DATA",
-        "RATESCAN",
-        "SHUTDOWN",
-        "OVTEST",
-        "RATESCAN2",
-        "SLEEP",
-        "CUSTOM" ];
+    measurementName_by_key = {}
+    db.query("SELECT * from MeasurementType").forEach(
+        function(row){
+            measurementName_by_key[row.fMeasurementTypeKey] = row.fMeasurementTypeName.toUpperCase();
+        }
+    );
 
     // Because Main.js could start a new observations just in the moment between 'now'
     // and entering the new data in the database, we have to use the unique id
@@ -58,7 +52,7 @@ function getSchedule()
 
         var m = { }
 
-        m.task = measurementType[row.fMeasurementTypeKey];
+        m.task = measurementName_by_key[row.fMeasurementTypeKey];
 
         if (row.fSourceKey)
             m.source = sources_by_key[row.fSourceKey];
