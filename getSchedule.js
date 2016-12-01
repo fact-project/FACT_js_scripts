@@ -80,3 +80,18 @@ function getSchedule()
 
     return schedule;
 }
+
+function get_index_of_current_observation(observations, now)
+{
+    if (now==undefined)
+        now = new Date();
+
+    if (isNaN(now.valueOf()))
+        throw new Error("Date argument in get_index_of_current_observation invalid.");
+
+    for (var i=0; i<observations.length; i++)
+        if (now<observations[i].start)
+            return i-1;
+
+    return observations.length-1;
+}

@@ -42,24 +42,6 @@ if (!$['schedule-database'])
 
 var observations = [ ];
 
-// Get the observation scheduled for 'now' from the table and
-// return its index
-function getObservation(now)
-{
-    if (now==undefined)
-        now = new Date();
-
-    if (isNaN(now.valueOf()))
-        throw new Error("Date argument in getObservation invalid.");
-
-    observations = getSchedule();
-
-    for (var i=0; i<observations.length; i++)
-        if (now<observations[i].start)
-            return i-1;
-
-    return observations.length-1;
-}
 
 // ================================================================
 //  Code to check whether observation is allowed
@@ -1302,7 +1284,8 @@ dim.send("FAD_CONTROL/SET_FILE_FORMAT", 6);
 // Print some information for the user about the
 // expected first oberservation
 // ----------------------------------------------------------------
-var test = getObservation();
+observations = getSchedule();
+var test = get_index_of_current_observation(observations);
 if (test!=undefined)
 {
     var n = new Date();
@@ -1322,7 +1305,7 @@ if (test!=undefined)
 dim.log("Entering main loop.");
 console.out("");
 
-var run = -2; // getObservation never called
+var run = -2; // get_index_of_current_observation never called
 var sub;
 var lastId;
 var nextId;
@@ -1369,7 +1352,8 @@ while (!processIrq())
 {
     // Check if observation position is still valid
     // If source position has changed, set run=0
-    var idxObs = getObservation();
+    observations = getSchedule();
+    var idxObs = get_index_of_current_observation(observations);
     if (idxObs===undefined)
         break;
 
