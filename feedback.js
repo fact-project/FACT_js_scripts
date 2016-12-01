@@ -3,6 +3,9 @@
 function Feedback(){
     var service_feedback = new Subscription("FEEDBACK/CALIBRATED_CURRENTS");
 
+    /*
+     --> changes this.ok and this.last
+    */
     service_feedback.onchange = function(evt)
     {
         if (!evt.data)
@@ -51,7 +54,6 @@ function Feedback(){
             return;
         }
 
-        // check of feedback has to be switched on
         var isOn = state=="VoltageOn" || state=="Ramping";
         if (isOn)
         {
@@ -62,25 +64,11 @@ function Feedback(){
                 dim.send("FTM_CONTROL/STOP_TRIGGER");
                 dim.wait("FTM_CONTROL", "Valid", 3000);
             }
-
-            // Supress the possibility that the bias control is
-            // ramping and will reject the command to switch the
-            // voltage off
-            //dim.send("FEEDBACK/STOP");
-            //dim.wait("FEEDBACK", "Calibrated", 3000);
-
-            // Make sure we are not in Ramping anymore
-            //dim.wait("BIAS_CONTROL", "VoltageOn", 3000);
-
-            // Switch voltage off
             dim.send("BIAS_CONTROL/SET_ZERO_VOLTAGE");
         }
 
-        dim.wait("BIAS_CONTROL", "VoltageOff", 60000); // FIXME: 30000?
+        dim.wait("BIAS_CONTROL", "VoltageOff", 60000);
         dim.wait("FEEDBACK",     "Calibrated",  3000);
-
-        // FEEDBACK stays in CurrentCtrl when Voltage is off but output enabled
-        // dim.wait("FEEDBACK", "CurrentCtrlIdle", 1000);
 
         if (isOn)
             dim.log("Voltage off.");
