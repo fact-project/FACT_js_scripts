@@ -42,46 +42,6 @@ if (!$['schedule-database'])
 
 var observations = [ ];
 
-
-// ================================================================
-//  Code to check whether observation is allowed
-// ================================================================
-/*
-function currentEst(source)
-{
-    var moon = new Moon();
-    if (!moon.isUp)
-        return 7.7;
-
-    var dist = Sky.dist(moon, source);
-
-    var alt = 90-moon.toLocal().zd;
-
-    var lc = dist*alt*pow(Moon.disk(), 6)/360/360;
-
-    var cur = 7.7+4942*lc;
-
-    return cur;
-}
-
-function thresholdEst(source) // relative threshold (ratio)
-{
-    // Assumption:
-    // atmosphere is 70km, shower taks place after 60km, earth radius 6400km
-    // just using the cosine law
-    // This fits very well with MC results: See Roger Firpo, p.45
-    // "Study of the MAGIC telescope sensitivity for Large Zenith Angle observations"
-
-    var c = Math.cos(Math.Pi-source.zd);
-    var ratio = (10*sqrt(409600*c*c+9009) + 6400*c - 60)/10;
-
-    // assumption: Energy threshold increases linearily with current
-    // assumption: Energy threshold increases linearily with distance
-
-    return ratio*currentEst(source)/7.7;
-}
-*/
-
 // ================================================================
 //  Code to perform the DRS calib sequence
 // ================================================================
