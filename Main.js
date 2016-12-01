@@ -46,44 +46,6 @@ function getObservation(now)
     return observations.length-1;
 }
 
-// ================================================================
-//  Code to check whether observation is allowed
-// ================================================================
-/*
-function currentEst(source)
-{
-    var moon = new Moon();
-    if (!moon.isUp)
-        return 7.7;
-
-    var dist = Sky.dist(moon, source);
-
-    var alt = 90-moon.toLocal().zd;
-
-    var lc = dist*alt*pow(Moon.disk(), 6)/360/360;
-
-    var cur = 7.7+4942*lc;
-
-    return cur;
-}
-
-function thresholdEst(source) // relative threshold (ratio)
-{
-    // Assumption:
-    // atmosphere is 70km, shower taks place after 60km, earth radius 6400km
-    // just using the cosine law
-    // This fits very well with MC results: See Roger Firpo, p.45
-    // "Study of the MAGIC telescope sensitivity for Large Zenith Angle observations"
-
-    var c = Math.cos(Math.Pi-source.zd);
-    var ratio = (10*sqrt(409600*c*c+9009) + 6400*c - 60)/10;
-
-    // assumption: Energy threshold increases linearily with current
-    // assumption: Energy threshold increases linearily with distance
-
-    return ratio*currentEst(source)/7.7;
-}
-*/
 
 // ================================================================
 //  Code to perform the DRS calib sequence
@@ -322,9 +284,9 @@ service_feedback.voltageOff = function()
 //      this is not the case, in the sense, that the caller can now take data.
 //      instead the caller of voltageOn() *must* call waitForVoltageOn() afterwards
 //      in order to safely take good-quality data.
-//      This could lead to nasty bugs in the sense, that the second call might 
+//      This could lead to nasty bugs in the sense, that the second call might
 //      be forgotten by somebody
-//      
+//
 //      so I suggest to rename voltageOn() --> prepareVoltageOn()
 //      waitForVoltageOn() stays as it is
 //      and one creates a third method called:voltageOn() like this
@@ -333,7 +295,7 @@ service_feedback.voltageOff = function()
  *          this.prepareVoltageOn();
  *          this.waitForVoltageOn();
  *      }
- * 
+ *
  * */
 //      For convenience.
 
@@ -860,7 +822,7 @@ while (!processIrq())
     if (idxObs==-1)
     {
         // flag that the first observation will be in the future
-        run = -1; 
+        run = -1;
         v8.sleep(1000);
         continue;
     }
@@ -997,14 +959,14 @@ while (!processIrq())
     if (!checkStates(table))
     {
         throw new Error("Something unexpected has happened. One of the servers "+
-                        "is in a state in which it should not be. Please,"+ 
+                        "is in a state in which it should not be. Please,"+
                         "try to find out what happened...");
     }
 
-    datalogger_subscriptions.check();                                         
-                                                                                
+    datalogger_subscriptions.check();
+
     // If this is an observation which needs the voltage to be swicthed on
-    // skip that if the voltage is not stable                                    
+    // skip that if the voltage is not stable
     /*
     if (obs[sub].task=="DATA" || obs[sub].task=="RATESCAN")
     {
@@ -1445,7 +1407,7 @@ while (!processIrq())
         //  ...when more than 15min of observation are left
         //  ...no drs calibration was done yet
         var drscal = (run%4==0 && (remaining>15 && diff>70)) || diff==null;
-    
+
         if (point)
         {
             // Switch the voltage to a reduced voltage level
