@@ -387,19 +387,6 @@ function Shutdown(type)
 
     console.out("","Waiting for telescope to park. This may take a while.");
 
-    // FIXME: This might not work is the drive is already close to park position
-    //dim.wait("DRIVE_CONTROL", "Parking", 3000);
-
-    /*
-    // Check if DRS calibration is necessary
-    var diff = getTimeSinceLastDrsCalib();
-    if (diff>30 || diff==null)
-    {
-        doDrsCalibration("singlepe");  // will turn voltage off
-        if (irq)
-            break;
-    }*/
-
     //take single pe run if required
     if (type=="singlepe")
     {
