@@ -399,24 +399,6 @@ function Shutdown(type)
         // Before we can switch to 3000 we have to make the right DRS calibration
         dim.log("Taking single p.e. run.");
         while (!irq && !takeRun("single-pe", 10000));
-
-        /*
-         Maybe we need to send a trigger... but data runs contain pedestal triggers... so it should work in any case...
-        var customRun = function()
-            {
-                v8.sleep(500);//wait that configuration is set
-                dim.wait("FTM_CONTROL", "TriggerOn", 15000);
-                dim.send("FAD_CONTROL/SEND_SINGLE_TRIGGER");
-                dim.send("RATE_CONTROL/STOP");
-                dim.send("FTM_CONTROL/STOP_TRIGGER");
-                dim.wait("FTM_CONTROL", "Valid", 3000);
-                dim.send("FTM_CONTROL/ENABLE_TRIGGER", true);
-                dim.send("FTM_CONTROL/SET_TIME_MARKER_DELAY", 123);
-                dim.send("FTM_CONTROL/SET_THRESHOLD", -1, obs[sub].threshold);
-                v8.sleep(500);//wait that configuration is set
-                dim.send("FTM_CONTROL/START_TRIGGER");
-                dim.wait("FTM_CONTROL", "TriggerOn", 15000);
-            }*/
     }
 
     //wait until drive is in locked (after it reached park position)
