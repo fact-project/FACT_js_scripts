@@ -15,6 +15,7 @@ include("scripts/handleFeedbackConnected.js");
 include("scripts/handleRatectrlConnected.js");
 include("scripts/handleLidClosed.js");
 include("scripts/handleFadConnected.js");
+include("scripts/doSetupDaq.js");
 include('scripts/Hist1D.js');
 include('scripts/Hist2D.js');
 include('scripts/takeRun.js');
@@ -53,41 +54,7 @@ console.out("");
 dim.alarm();
 
 doSwitchCameraPowerOn();
-var loop;
-
-// -----------------------------------------------------------------
-// Now take care that the bias control, the ftm and the fsc are
-// properly connected and are in a reasonable state (e.g. the
-// trigger is switched off)
-// -----------------------------------------------------------------
-
-
-checkSend(["BIAS_CONTROL","FAD_CONTROL","FTM_CONTROL", "FSC_CONTROL", "FEEDBACK", "RATE_CONTROL", "MCP"]);
-
-dim.send("MCP/RESET");
-
-loop = new Handler("SystemSetup");
-loop.add(handleBiasVoltageOff);
-loop.add(handleFtmIdle);
-loop.add(handleFscConnected);
-loop.add(handleFadConnected);
-loop.add(handleFeedbackConnected); // Feedback needs FAD to be Connected
-loop.add(handleRatectrlConnected);
-//loop.add(handleLidClosed);
-loop.run();
-
-console.out("biasctrl:    "+dim.state("BIAS_CONTROL").name);
-console.out("ftmctrl:     "+dim.state("FTM_CONTROL").name);
-console.out("fscctrl:     "+dim.state("FSC_CONTROL").name);
-console.out("feedback:    "+dim.state("FEEDBACK").name);
-console.out("ratecontrol: "+dim.state("RATE_CONTROL").name);
-console.out("fadctrl:     "+dim.state("FAD_CONTROL").name);
-console.out("mcp:         "+dim.state("MCP").name);
-console.out("");
-
-console.out("Enable all FTU");
-dim.send("FTM_CONTROL/ENABLE_FTU", -1, true);
-
+doSetupDaq();
 // -----------------------------------------------------------------
 // Now we check the FTU connection
 // -----------------------------------------------------------------
@@ -420,7 +387,7 @@ if ((dim.state("PWR_CONTROL").index&16)==0)
 
 
 checkSend(["DRIVE_CONTROL"]);
-
+var loop;
 loop = new Handler("ArmDrive");
 loop.add(handleDriveArmed);
 loop.run();
