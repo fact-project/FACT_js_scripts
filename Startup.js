@@ -13,7 +13,7 @@ include("scripts/CheckStates.js");
 
 include("scripts/handlePwrCameraOn.js");
 
-checkSend(["AGILENT_CONTROL_24V","AGILENT_CONTROL_50V","AGILENT_CONTROL_80V","PWR_CONTROL"]);
+checkSend(["PWR_CONTROL"]);
 
 loop = new Handler("PowerOn");
 loop.add(handlePwrCameraOn);
