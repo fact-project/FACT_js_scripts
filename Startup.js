@@ -11,9 +11,6 @@ include("scripts/CheckStates.js");
 // Make sure camera electronics is switched on and has power
 // -----------------------------------------------------------------
 
-include("scripts/handleAgilentPowerOn24V.js");
-include("scripts/handleAgilentPowerOn50V.js");
-include("scripts/handleAgilentPowerOn80V.js");
 include("scripts/handlePwrCameraOn.js");
 
 checkSend(["AGILENT_CONTROL_24V","AGILENT_CONTROL_50V","AGILENT_CONTROL_80V","PWR_CONTROL"]);
