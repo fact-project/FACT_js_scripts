@@ -119,6 +119,7 @@ if (1)//diff>8 && now.getHours()>16 || runs.time<power)
     sub_connections.get(5000);
     sub_startrun.get(5000);
 
+    var incomplete = 0;
     include('scripts/takeRun.js');
 
     while (1)

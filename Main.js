@@ -324,9 +324,9 @@ service_feedback.voltageOff = function()
 //      this is not the case, in the sense, that the caller can now take data.
 //      instead the caller of voltageOn() *must* call waitForVoltageOn() afterwards
 //      in order to safely take good-quality data.
-//      This could lead to nasty bugs in the sense, that the second call might 
+//      This could lead to nasty bugs in the sense, that the second call might
 //      be forgotten by somebody
-//      
+//
 //      so I suggest to rename voltageOn() --> prepareVoltageOn()
 //      waitForVoltageOn() stays as it is
 //      and one creates a third method called:voltageOn() like this
@@ -335,7 +335,7 @@ service_feedback.voltageOff = function()
  *          this.prepareVoltageOn();
  *          this.waitForVoltageOn();
  *      }
- * 
+ *
  * */
 //      For convenience.
 
@@ -712,6 +712,7 @@ var sub_connections = new Subscription("FAD_CONTROL/CONNECTIONS");
 var sub_startrun = new Subscription("FAD_CONTROL/START_RUN");
 sub_startrun.get(5000);
 
+var incomplete = 0;
 include('scripts/takeRun.js');
 
 // ----------------------------------------------------------------
@@ -862,7 +863,7 @@ while (!processIrq())
     if (idxObs==-1)
     {
         // flag that the first observation will be in the future
-        run = -1; 
+        run = -1;
         v8.sleep(1000);
         continue;
     }
@@ -999,14 +1000,14 @@ while (!processIrq())
     if (!checkStates(table))
     {
         throw new Error("Something unexpected has happened. One of the servers "+
-                        "is in a state in which it should not be. Please,"+ 
+                        "is in a state in which it should not be. Please,"+
                         "try to find out what happened...");
     }
 
-    datalogger_subscriptions.check();                                         
-                                                                                
+    datalogger_subscriptions.check();
+
     // If this is an observation which needs the voltage to be swicthed on
-    // skip that if the voltage is not stable                                    
+    // skip that if the voltage is not stable
     /*
     if (obs[sub].task=="DATA" || obs[sub].task=="RATESCAN")
     {
@@ -1447,7 +1448,7 @@ while (!processIrq())
         //  ...when more than 15min of observation are left
         //  ...no drs calibration was done yet
         var drscal = (run%4==0 && (remaining>15 && diff>70)) || diff==null;
-    
+
         if (point)
         {
             // Switch the voltage to a reduced voltage level

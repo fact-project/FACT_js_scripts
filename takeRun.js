@@ -3,9 +3,6 @@
 // ================================================================
 //  Code related to monitoring the fad system
 // ================================================================
-
-var incomplete = 0;
-
 sub_incomplete.onchange = function(evt)
 {
     if (!evt.data)
