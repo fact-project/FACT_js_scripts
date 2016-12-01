@@ -34,7 +34,7 @@ function Feedback(){
         }
         avg /= 320;
 
-        this.ok = cnt<3;// || (this.last!=undefined && Math.abs(this.last-avg)<0.002);
+        this.ok = cnt<3;
 
         console.out("  DeltaUov=%.3f (%.3f) [N(>0.033V)=%d]".$(avg, avg-this.last, cnt));
 
