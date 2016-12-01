@@ -19,9 +19,6 @@ include("scripts/handlePwrCameraOn.js");
 checkSend(["AGILENT_CONTROL_24V","AGILENT_CONTROL_50V","AGILENT_CONTROL_80V","PWR_CONTROL"]);
 
 loop = new Handler("PowerOn");
-//loop.add(handleAgilentPowerOn24V);
-//loop.add(handleAgilentPowerOn50V);
-//loop.add(handleAgilentPowerOn80V);
 loop.add(handlePwrCameraOn);
 loop.run();
 console.out("");
