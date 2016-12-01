@@ -22,6 +22,7 @@ include("scripts/handleDriveArmed.js");
 include('scripts/doDrsCalibration.js');
 include('scripts/lid_functions.js');
 include('scripts/feedback.js');
+include('scripts/shutdown.js');
 
 
 dim.log("Start: "+__FILE__+" ["+__DATE__+"]");
