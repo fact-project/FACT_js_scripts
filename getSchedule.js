@@ -1,5 +1,3 @@
-// ======================================================================================
-
 function getSchedule()
 {
     // List of all available measurement types (see also Observation_class.js)
@@ -80,13 +78,3 @@ function getSchedule()
 
     return schedule;
 }
-
-// -------------------------------------------------------------------------------------
-
-/*
- // remove "
- conv = conv.replace(/\"(\w+)\":/ig, "$1:");
- // must contain one , less than :
- // must not contain " and '
- //var test = "{ra:12,dec:13}".replace(/\ /g, "").replace(/(\w+):/gi, "\"$1\":");
-*/
