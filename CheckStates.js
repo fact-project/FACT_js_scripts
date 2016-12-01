@@ -201,27 +201,6 @@ function dimwait(server, state, timeout)
         throw new Error("Timeout waiting for ["+states+"] of "+server+".");
 
     return false;
-
-
-    /*
-    if (!timeout)
-        timeout = 5000;
-
-    var time = new Date();
-    while (timeout<0 || new Date()-time<timeout)
-    {
-        var s = dim.state(server);
-        if (s.index===state || s.name===state)
-            return true;
-
-        if (s.index==undefined)
-            throw "Server "+server+" not connected waiting for "+state+".";
-
-        v8.sleep();
-    }
-
-    return false;
-*/
 }
 
 function Sleep(timeout)
