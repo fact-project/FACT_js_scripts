@@ -79,18 +79,6 @@ function Shutdown(type)
 
     console.out("","Waiting for telescope to park. This may take a while.");
 
-    // FIXME: This might not work is the drive is already close to park position
-    //dim.wait("DRIVE_CONTROL", "Parking", 3000);
-
-    /*
-    // Check if DRS calibration is necessary
-    var diff = getTimeSinceLastDrsCalib();
-    if (diff>30 || diff==null)
-    {
-        doDrsCalibration("singlepe");  // will turn voltage off
-        if (irq)
-            break;
-    }*/
 
     //take single pe run if required
     if (type=="singlepe")
@@ -105,23 +93,6 @@ function Shutdown(type)
         dim.log("Taking single p.e. run.");
         while (!irq && !takeRun("single-pe", 10000));
 
-        /*
-         Maybe we need to send a trigger... but data runs contain pedestal triggers... so it should work in any case...
-        var customRun = function()
-            {
-                v8.sleep(500);//wait that configuration is set
-                dim.wait("FTM_CONTROL", "TriggerOn", 15000);
-                dim.send("FAD_CONTROL/SEND_SINGLE_TRIGGER");
-                dim.send("RATE_CONTROL/STOP");
-                dim.send("FTM_CONTROL/STOP_TRIGGER");
-                dim.wait("FTM_CONTROL", "Valid", 3000);
-                dim.send("FTM_CONTROL/ENABLE_TRIGGER", true);
-                dim.send("FTM_CONTROL/SET_TIME_MARKER_DELAY", 123);
-                dim.send("FTM_CONTROL/SET_THRESHOLD", -1, obs[sub].threshold);
-                v8.sleep(500);//wait that configuration is set
-                dim.send("FTM_CONTROL/START_TRIGGER");
-                dim.wait("FTM_CONTROL", "TriggerOn", 15000);
-            }*/
     }
 
     //wait until drive is in locked (after it reached park position)
@@ -185,51 +156,7 @@ function Shutdown(type)
 }
 
 
-// ================================================================
-//  Function to set the system to sleep-mode
-// ================================================================
-// FIXME: do not repeat code from shutdown-function
-/*
-function GoToSleep()
-{
-    CloseLid();
 
-    var isArmed = dim.state("DRIVE_CONTROL").name=="Armed";
-    if (!isArmed)
-    {
-        dim.log("Drive not ready to move. -> send STOP");
-        dim.send("DRIVE_CONTROL/STOP");
-        dim.wait("DRIVE_CONTROL", "Armed", 5000);
-    }
-
-    dim.send("DRIVE_CONTROL/MOVE_TO 101 0");//park position
-    var sub = new Subscription("DRIVE_CONTROL/POINTING_POSITION");
-    sub.get(5000);  // FIXME: Proper error message in case of failure
-
-    function func()
-    {
-        var report = sub.get();
-
-        var zd = report.obj['Zd'];
-        var az = report.obj['Az'];
-
-        if (zd>100 && Math.abs(az)<1)
-            return true;
-
-        return undefined;
-    }
-
-    try { v8.timeout(150000, func); }
-    catch (e)
-    {
-        var p = sub.get();
-        dim.log('Park position not reached? Telescope at Zd='+p.obj['Zd']+' Az='+p.obj['Az']);
-    }
-    var p2 = sub.get();
-    dim.log('Telescope at Zd=%.1fdeg Az=%.1fdeg'.$(p2.obj['Zd'], p2.obj['Az']));
-    sub.close();
-}
-*/
 
 // ================================================================
 // Check datalogger subscriptions
