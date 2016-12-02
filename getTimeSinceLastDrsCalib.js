@@ -3,11 +3,8 @@
 
 function getTimeSinceLastDrsCalib()
 {
-    var sub_drsruns = new Subscription("FAD_CONTROL/DRS_RUNS");
-    sub_drsruns.get(5000);
-
     // ----- Time since last DRS Calibration [min] ------
-    var runs = sub_drsruns.get(0);
+    var runs = FadControl.get_drs_runs(0);
     var diff = (new Date()-runs.time)/60000;
 
     // Warning: 'roi=300' is a number which is not intrisically fixed
@@ -19,6 +16,5 @@ function getTimeSinceLastDrsCalib()
     else
         dim.log("No valid DRS calibration available.");
 
-    sub_drsruns.close();
     return valid ? diff : null;
 }
