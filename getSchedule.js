@@ -81,8 +81,8 @@ function getSchedule()
 
         if (row.fSourceKey)
             m.source = sources_by_key[row.fSourceKey];
-        var extra_data = jsonify_schedule_fData(row.fData);
-        for (var key in extra_data)
+
+        for (var key in jsonify_schedule_fData(row.fData))
             m[key] = obj[key];
 
         if (!schedule[entry])
@@ -117,4 +117,36 @@ function get_index_of_current_observation(now)
             return i-1;
 
     return observations.length-1;
+}
+
+function get_current_observation(now)
+{
+    observations = getSchedule();
+    if (now==undefined)
+        now = new Date();
+
+    if (isNaN(now.valueOf()))
+        throw new Error("Date argument in get_index_of_current_observation invalid.");
+
+    for (var i=0; i<observations.length; i++)
+        if (now<observations[i].start)
+            return observations[i-1];
+
+    return undefined;
+}
+
+function get_next_observation(now)
+{
+    observations = getSchedule();
+    if (now==undefined)
+        now = new Date();
+
+    if (isNaN(now.valueOf()))
+        throw new Error("Date argument in get_index_of_current_observation invalid.");
+
+    for (var i=0; i<observations.length; i++)
+        if (now<observations[i].start)
+            return observations[i];
+
+    return undefined;
 }
