@@ -154,62 +154,58 @@ while (!processIrq(service_feedback, irq))
         continue;
     }
 
-    // Current and next observation target
-    var obs     = observations[idxObs];
-    var nextObs = observations[idxObs+1];
-
     // Check if observation target has changed
-    if (lastId!=obs.id)
+    if (lastId!=current_observation.id)
     {
-        dim.log("Starting new observation ["+obs.start.toUTCString()+", id="+obs.id+"]");
+        dim.log("Starting new observation ["+current_observation.start.toUTCString()+", id="+current_observation.id+"]");
         sub = 0;
         if (run==-2){
-            sub = obs.length-1;
+            sub = current_observation.length-1;
         }
         run = 0;
-        lastId = obs.id;
+        lastId = current_observation.id;
     }
 
 
-    if (nextObs && nextId!=nextObs.id)
+    if (next_observation && nextId!=next_observation.id)
     {
-        dim.log("Next observation scheduled for "+nextObs.start.toUTCString()+" [id="+nextObs.id+"]");
+        dim.log("Next observation scheduled for "+next_observation.start.toUTCString()+" [id="+next_observation.id+"]");
         console.out("");
-        nextId = nextObs.id;
+        nextId = next_observation.id;
     }
 
-    if (!nextObs && nextId)
+    if (!next_observation && nextId)
     {
         dim.log("No further observation scheduled.");
         console.out("");
         nextId = undefined;
     }
 
-    if (sub>=obs.length)
+    if (sub>=current_observation.length)
     {
         v8.sleep(1000);
         continue;
     }
 
-    if (system_on===false && obs[sub].task!="STARTUP")
+    if (system_on===false && current_observation[sub].task!="STARTUP")
     {
         v8.sleep(1000);
         continue;
     }
 
     // Check if sun is still up... only DATA and */
-    if ((obs[sub].task=="DATA" || obs[sub].task=="RATESCAN" || obs[sub].task=="RATESCAN2" ) && Sun.horizon(-12).isUp)
+    if ((current_observation[sub].task=="DATA" || current_observation[sub].task=="RATESCAN" || current_observation[sub].task=="RATESCAN2" ) && Sun.horizon(-12).isUp)
     {
         var now = new Date();
         var remaining = (Sun.horizon(-12).set - now)/60000;
-        console.out(now.toUTCString()+" - "+obs[sub].task+": Sun above FACT-horizon: sleeping 1min, remaining %.1fmin".$(remaining));
+        console.out(now.toUTCString()+" - "+current_observation[sub].task+": Sun above FACT-horizon: sleeping 1min, remaining %.1fmin".$(remaining));
         v8.sleep(60000);
         continue;
     }
 
 
-    if (obs[sub].task!="IDLE" && (obs[sub].task!="DATA" && run>0))
-        dim.log("New task ["+obs[sub]+"]");
+    if (current_observation[sub].task!="IDLE" && (current_observation[sub].task!="DATA" && run>0))
+        dim.log("New task ["+current_observation[sub]+"]");
 
     // FIXME: Maybe print a warning if Drive is on during day time!
 
@@ -221,8 +217,8 @@ while (!processIrq(service_feedback, irq))
 
     datalogger_subscriptions.check();
 
-    // Check if obs.task is one of the one-time-tasks
-    switch (obs[sub].task)
+    // Check if current_observation.task is one of the one-time-tasks
+    switch (current_observation[sub].task)
     {
     case "IDLE":
         v8.sleep(5000);
@@ -371,15 +367,15 @@ while (!processIrq(service_feedback, irq))
         // Switch the voltage to a reduced level (Ubd)
         service_feedback.voltageOn(0);
 
-        if (obs[sub].source != null) // undefined != null -> false
+        if (current_observation[sub].source != null) // undefined != null -> false
         {
-            dim.log("Pointing telescope to '"+obs[sub].source+"'.");
-            dim.send("DRIVE_CONTROL/TRACK_ON", obs[sub].source);
+            dim.log("Pointing telescope to '"+current_observation[sub].source+"'.");
+            dim.send("DRIVE_CONTROL/TRACK_ON", current_observation[sub].source);
         }
         else
         {
-            dim.log("Pointing telescope to ra="+obs[sub].ra+" dec="+obs[sub].dec);
-            dim.send("DRIVE_CONTROL/TRACK", obs[sub].ra, obs[sub].dec);
+            dim.log("Pointing telescope to ra="+current_observation[sub].ra+" dec="+current_observation[sub].dec);
+            dim.send("DRIVE_CONTROL/TRACK", current_observation[sub].ra, current_observation[sub].dec);
         }
 
         dim.wait("DRIVE_CONTROL", "OnTrack", 150000); // 110s for turning and 30s for stabilizing
@@ -442,7 +438,7 @@ while (!processIrq(service_feedback, irq))
         dim.send("DRIVE_CONTROL/STOP");
         dim.wait("DRIVE_CONTROL", "Initialized", 15000);
 
-        if (obs[sub].rstype=="dark-bias-off")
+        if (current_observation[sub].rstype=="dark-bias-off")
             service_feedback.voltageOff();
         else
         {
@@ -453,30 +449,30 @@ while (!processIrq(service_feedback, irq))
         }
 
         // Open the lid if required
-        if (!obs[sub].lidclosed)
+        if (!current_observation[sub].lidclosed)
             OpenLid();
         else
             CloseLid();
 
         // track source/position or move to position
-        if (obs[sub].lidclosed)
+        if (current_observation[sub].lidclosed)
         {
-            dim.log("Moving telescope to zd="+obs[sub].zd+" az="+obs[sub].az);
-            dim.send("DRIVE_CONTROL/MOVE_TO", obs[sub].zd, obs[sub].az);
+            dim.log("Moving telescope to zd="+current_observation[sub].zd+" az="+current_observation[sub].az);
+            dim.send("DRIVE_CONTROL/MOVE_TO", current_observation[sub].zd, current_observation[sub].az);
             v8.sleep(3000);
             dim.wait("DRIVE_CONTROL", "Initialized", 150000); // 110s for turning and 30s for stabilizing
         }
         else
         {
-            if (obs[sub].source != null)  // undefined != null -> false
+            if (current_observation[sub].source != null)  // undefined != null -> false
             {
-                dim.log("Pointing telescope to '"+obs[sub].source+"'.");
-                dim.send("DRIVE_CONTROL/TRACK_ON", obs[sub].source);
+                dim.log("Pointing telescope to '"+current_observation[sub].source+"'.");
+                dim.send("DRIVE_CONTROL/TRACK_ON", current_observation[sub].source);
             }
             else
             {
-                dim.log("Pointing telescope to ra="+obs[sub].ra+" dec="+obs[sub].dec);
-                dim.send("DRIVE_CONTROL/TRACK", obs[sub].ra, obs[sub].dec);
+                dim.log("Pointing telescope to ra="+current_observation[sub].ra+" dec="+current_observation[sub].dec);
+                dim.send("DRIVE_CONTROL/TRACK", current_observation[sub].ra, current_observation[sub].dec);
             }
 
             dim.wait("DRIVE_CONTROL", "OnTrack", 150000); // 110s for turning and 30s for stabilizing
@@ -484,7 +480,7 @@ while (!processIrq(service_feedback, irq))
 
         // Now tracking stable, switch voltage to nominal level and wait
         // for stability.
-        if (obs[sub].rstype!="dark-bias-off")
+        if (current_observation[sub].rstype!="dark-bias-off")
         {
             service_feedback.voltageOn();
             service_feedback.waitForVoltageOn(irq);
@@ -494,12 +490,12 @@ while (!processIrq(service_feedback, irq))
         {
             var tm2 = new Date();
 
-            dim.log("Starting ratescan 2/1 ["+obs[sub].rstype+"]");
+            dim.log("Starting ratescan 2/1 ["+current_observation[sub].rstype+"]");
 
             //set reference to whole camera (in case it was changed)
             dim.send("RATE_SCAN/SET_REFERENCE_CAMERA");
             // Start rate scan
-            dim.send("RATE_SCAN/START_THRESHOLD_SCAN", 50, 300, 20, obs[sub].rstype);
+            dim.send("RATE_SCAN/START_THRESHOLD_SCAN", 50, 300, 20, current_observation[sub].rstype);
 
             // Lets wait if the ratescan really starts... this might take a few
             // seconds because RATE_SCAN configures the ftm and is waiting for
@@ -525,10 +521,10 @@ while (!processIrq(service_feedback, irq))
         {
             var tm2 = new Date();
 
-            dim.log("Starting ratescan 2/2 ["+obs[sub].rstype+"]");
+            dim.log("Starting ratescan 2/2 ["+current_observation[sub].rstype+"]");
 
             // Start rate scan
-            dim.send("RATE_SCAN/START_THRESHOLD_SCAN", 300, 1000, 100, obs[sub].rstype);
+            dim.send("RATE_SCAN/START_THRESHOLD_SCAN", 300, 1000, 100, current_observation[sub].rstype);
 
             // Lets wait if the ratescan really starts... this might take a few
             // seconds because RATE_SCAN configures the ftm and is waiting for
@@ -560,7 +556,7 @@ while (!processIrq(service_feedback, irq))
         dim.wait("DRIVE_CONTROL", "Initialized", 15000);
 
         // Ramp bias if needed
-        if (!obs[sub].biason)
+        if (!current_observation[sub].biason)
             service_feedback.voltageOff();
         else
         {
@@ -573,14 +569,14 @@ while (!processIrq(service_feedback, irq))
         CloseLid();
 
         // Move to position (zd/az)
-        dim.log("Moving telescope to zd="+obs[sub].zd+" az="+obs[sub].az);
-        dim.send("DRIVE_CONTROL/MOVE_TO", obs[sub].zd, obs[sub].az);
+        dim.log("Moving telescope to zd="+current_observation[sub].zd+" az="+current_observation[sub].az);
+        dim.send("DRIVE_CONTROL/MOVE_TO", current_observation[sub].zd, current_observation[sub].az);
         v8.sleep(3000);
         dim.wait("DRIVE_CONTROL", "Initialized", 150000); // 110s for turning and 30s for stabilizing
 
         // Now tracking stable, switch voltage to nominal level and wait
         // for stability.
-        if (obs[sub].biason)
+        if (current_observation[sub].biason)
         {
             service_feedback.voltageOn();
             service_feedback.waitForVoltageOn(irq);
@@ -588,7 +584,7 @@ while (!processIrq(service_feedback, irq))
 
         if (!irq)
         {
-            dim.log("Taking custom run with time "+obs[sub].time+"s, threshold="+obs[sub].threshold+", biason="+obs[sub].biason);
+            dim.log("Taking custom run with time "+current_observation[sub].time+"s, threshold="+current_observation[sub].threshold+", biason="+current_observation[sub].biason);
 
             var customRun = function()
             {
@@ -600,13 +596,13 @@ while (!processIrq(service_feedback, irq))
                 dim.wait("FTM_CONTROL", "Valid", 3000);
                 dim.send("FTM_CONTROL/ENABLE_TRIGGER", true);
                 dim.send("FTM_CONTROL/SET_TIME_MARKER_DELAY", 123);
-                dim.send("FTM_CONTROL/SET_THRESHOLD", -1, obs[sub].threshold);
+                dim.send("FTM_CONTROL/SET_THRESHOLD", -1, current_observation[sub].threshold);
                 v8.sleep(500);//wait that configuration is set
                 dim.send("FTM_CONTROL/START_TRIGGER");
                 dim.wait("FTM_CONTROL", "TriggerOn", 15000);
             }
 
-            takeRun("custom", -1, obs[sub].time, customRun);
+            takeRun("custom", -1, current_observation[sub].time, customRun);
         }
         dim.log("Task finished [CUSTOM].");
         dim.log("");
@@ -616,8 +612,8 @@ while (!processIrq(service_feedback, irq))
 
         // ========================== case "DATA" ============================
         // Calculate remaining time for this observation in minutes
-        var remaining = nextObs==undefined ? 0 : (nextObs.start-new Date())/60000;
-        //dim.log("DEBUG: remaining: "+remaining+" nextObs="+nextObs+" start="+nextObs.start);
+        var remaining = next_observation==undefined ? 0 : (next_observation.start-new Date())/60000;
+        //dim.log("DEBUG: remaining: "+remaining+" next_observation="+next_observation+" start="+next_observation.start);
 
         // ------------------------------------------------------------
 
@@ -630,7 +626,7 @@ while (!processIrq(service_feedback, irq))
         //  ...every four runs (every ~20min)
         //  ...if at least ten minutes of observation time are left
         //  ...if this is the first run on the source
-        var point  = (run%4==0 && remaining>10 && !obs[sub].orbit) || run==0; // undefined==null -> true!
+        var point  = (run%4==0 && remaining>10 && !current_observation[sub].orbit) || run==0; // undefined==null -> true!
 
         // Take DRS Calib...
         //  ...every four runs (every ~20min)
@@ -648,22 +644,22 @@ while (!processIrq(service_feedback, irq))
             // Change wobble position every four runs,
             // start with alternating wobble positions each day
             var wobble = (parseInt(run/4) + parseInt(new Date()/1000/3600/24-0.5))%2+1;
-            var angle  = obs[sub].angle == null ? Math.random()*360 : obs[sub].angle;
+            var angle  = current_observation[sub].angle == null ? Math.random()*360 : current_observation[sub].angle;
 
-            if (obs[sub].orbit) // != undefined, != null, != 0
-                dim.log("Pointing telescope to '"+obs[sub].source+"' [orbit="+obs[sub].orbit+"min, angle="+angle+"]");
+            if (current_observation[sub].orbit) // != undefined, != null, != 0
+                dim.log("Pointing telescope to '"+current_observation[sub].source+"' [orbit="+current_observation[sub].orbit+"min, angle="+angle+"]");
             else
-                dim.log("Pointing telescope to '"+obs[sub].source+"' [wobble="+wobble+"]");
+                dim.log("Pointing telescope to '"+current_observation[sub].source+"' [wobble="+wobble+"]");
 
             // This is a workaround to make sure that we really catch
             // the new OnTrack state later and not the old one
             dim.send("DRIVE_CONTROL/STOP");
             dim.wait("DRIVE_CONTROL", "Initialized", 15000);
 
-            if (obs[sub].orbit) // != undefined, != null, != 0
-                dim.send("DRIVE_CONTROL/TRACK_ORBIT", angle, obs[sub].orbit, obs[sub].source);
+            if (current_observation[sub].orbit) // != undefined, != null, != 0
+                dim.send("DRIVE_CONTROL/TRACK_ORBIT", angle, current_observation[sub].orbit, current_observation[sub].source);
             else
-                dim.send("DRIVE_CONTROL/TRACK_WOBBLE", wobble, obs[sub].source);
+                dim.send("DRIVE_CONTROL/TRACK_WOBBLE", wobble, current_observation[sub].source);
 
             // Do we have to check if the telescope is really moving?
             // We can cross-check the SOURCE service later
@@ -748,8 +744,8 @@ while (!processIrq(service_feedback, irq))
         continue; // case "DATA"
     }
 
-    if (nextObs!=undefined && sub==obs.length-1)
-        dim.log("Next observation will start at "+nextObs.start.toUTCString()+" [id="+nextObs.id+"]");
+    if (next_observation!=undefined && sub==current_observation.length-1)
+        dim.log("Next observation will start at "+next_observation.start.toUTCString()+" [id="+next_observation.id+"]");
 
     sub++;
 }
