@@ -52,6 +52,15 @@ var is_sunrise = (function () {
     }
 })();
 
+var has_obsersation_target_changed = (function () {
+    var last_observation;
+    return function (observation) {
+        var has_changed = last_observation != observation;
+        last_observation = observation;
+        return has_changed;
+    }
+})();
+
 
 dim.log("Start: "+__FILE__+" ["+__DATE__+"]");
 
@@ -116,7 +125,6 @@ console.out("");
 
 var run = -2; // get_index_of_current_observation never called
 var sub;
-var lastId;
 var nextId;
 var system_on;  // undefined
 
@@ -154,8 +162,7 @@ while (!processIrq(service_feedback, irq))
         continue;
     }
 
-    // Check if observation target has changed
-    if (lastId!=current_observation.id)
+    if (has_obsersation_target_changed(current_observation))
     {
         dim.log("Starting new observation ["+current_observation.start.toUTCString()+", id="+current_observation.id+"]");
         sub = 0;
@@ -163,7 +170,6 @@ while (!processIrq(service_feedback, irq))
             sub = current_observation.length-1;
         }
         run = 0;
-        lastId = current_observation.id;
     }
 
 
