@@ -1,8 +1,7 @@
 'use strict';
 
 function close_open_runs_if_needed(){
-    var sub_runs = new Subscription("FAD_CONTROL/RUNS");
-    var sruns = sub_runs.get(5000, false);
+    var sruns = FadControl.get_runs(5000, false);
 
     if (dim.state("FAD_CONTROL").name=="RunInProgress" || sruns.qos==1)
     {
@@ -10,14 +9,13 @@ function close_open_runs_if_needed(){
         dim.wait("FAD_CONTROL", "Connected", 3000);
 
         console.out("Waiting for open files to be closed...");
-        v8.timeout(60000, function() { if (sub_runs.get(0, false).qos==0) return true; });
+        v8.timeout(60000, function() { if (FadControl.get_runs(0, false).qos==0) return true; });
 
         // Although the file should be closed now, the processing might still be on-going
         // and delayed events might be received. The only fix for that issue is to
         // add the run number to the data we are waiting for
         v8.sleep(5000);
     }
-    sub_runs.close();
 }
 
 function take_one_single_event(){
@@ -78,9 +76,7 @@ function take_one_single_event(){
 function check_power_on_time(){
     console.out("Checking power on time");
 
-    var service_drs = new Subscription("FAD_CONTROL/DRS_RUNS");
-
-    var runs = service_drs.get(5000, false);
+    var runs = FadControl.get_drs_runs.get(5000, false);
 
 
     var power = dim.state("AGILENT_CONTROL_50V").time;
@@ -115,13 +111,13 @@ function check_power_on_time(){
         dim.log("Trying to restore last DRS calibration #"+nn+"  ["+runs.time+"; "+night+"]");
 
         // FIXME: Timeout
-        var drs_counter = service_drs.get(0, false).counter;
+        var drs_counter = FadControl.get_drs_runs(0, false).counter;
         dim.send("FAD_CONTROL/LOAD_DRS_CALIBRATION", filefmt.$(yy, mm, dd, night, nn));
 
         try
         {
             var now = new Date();
-            v8.timeout(3000, function() { if (service_drs.get(0, false).counter>drs_counter) return true; });
+            v8.timeout(3000, function() { if (FadControl.get_drs_runs(0, false).counter > drs_counter) return true; });
             dim.log("Last DRS calibration restored ["+(new Date()-now)/1000+"s]");
         }
         catch (e)
@@ -170,7 +166,5 @@ function check_power_on_time(){
 
         console.warn("There is probably an underflow condition in one DRS... please check manually.");
     }
-
-    service_drs.close();
 }
 
