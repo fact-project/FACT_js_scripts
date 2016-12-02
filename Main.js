@@ -237,160 +237,23 @@ while (!processIrq(service_feedback, irq))
         break;
 
     case "SINGLEPE":
-        // The lid must be closes
-        CloseLid();
-
-        // Check if DRS calibration is necessary
-        var diff = getTimeSinceLastDrsCalib();
-        if (diff>30 || diff==null)
-        {
-            doDrsCalibration("singlepe");  // will turn voltage off
-            if (irq)
-                break;
-        }
-
-        // The voltage must be on
-        service_feedback.voltageOn();
-        service_feedback.waitForVoltageOn(irq);
-
-        // Before we can switch to 3000 we have to make the right DRS calibration
-        dim.log("Taking single p.e. run.");
-        while (!irq && !takeRun("single-pe", 10000));
-
-        // It is unclear what comes next, so we better switch off the voltage
-        service_feedback.voltageOff();
+        handle_task_SINGLEPE(service_feedback, irq);
         dim.log("Task finished [SINGLE-PE]");
         console.out("");
         break;
 
     case "OVTEST":
-        var locked = dim.state("DRIVE_CONTROL").name=="Locked";
-        if (!locked)
-            dim.send("DRIVE_CONTROL/PARK");
-
-        dim.send("FEEDBACK/STOP");
-
-        // The lid must be closed
-        CloseLid();
-
-        if (!locked)
-        {
-            //console.out("Waiting for telescope to park. This may take a while.");
-            dim.wait("DRIVE_CONTROL", "Locked", 3000);
-            dim.send("DRIVE_CONTROL/UNLOCK");
-        }
-
-        // Check if DRS calibration is necessary
-        var diff = getTimeSinceLastDrsCalib();
-        if (diff>30 || diff==null)
-        {
-            doDrsCalibration(irq, "ovtest");  // will turn voltage off
-            if (irq)
-                break;
-        }
-
-        // The voltage must be on
-        service_feedback.voltageOn(0.4);
-        service_feedback.waitForVoltageOn(irq);
-
-        dim.log("Taking single p.e. run (0.4V)");
-        while (!irq && !takeRun("single-pe", 10000));
-
-        for (var i=5; i<18 && !irq; i++)
-        {
-            dim.send("FEEDBACK/STOP");
-            dim.wait("FEEDBACK", "Calibrated", 3000);
-            dim.wait("BIAS_CONTROL", "VoltageOn", 3000);
-            dim.send("FEEDBACK/START", i*0.1);
-            dim.wait("FEEDBACK", "InProgress", 45000);
-            dim.wait("BIAS_CONTROL", "VoltageOn", 60000); // FIXME: 30000?
-            service_feedback.waitForVoltageOn(irq);
-            dim.log("Taking single p.e. run ("+(i*0.1)+"V)");
-            while (!irq && !takeRun("single-pe", 10000));
-        }
-
-        // It is unclear what comes next, so we better switch off the voltage
-        service_feedback.voltageOff();
+        handle_task_OVTEST(service_feedback, irq);
         dim.log("Task finished [OVTEST]");
         console.out("");
         break;
 
     case "RATESCAN":
-        var tm1 = new Date();
-
-        // This is a workaround to make sure that we really catch
-        // the new OnTrack state later and not the old one
-        dim.send("DRIVE_CONTROL/STOP");
-        dim.wait("DRIVE_CONTROL", "Initialized", 15000);
-
-        // The lid must be open
-        OpenLid();
-
-        // Switch the voltage to a reduced level (Ubd)
-        service_feedback.voltageOn(0);
-
-        if (current_observation[sub].source != null) // undefined != null -> false
-        {
-            dim.log("Pointing telescope to '"+current_observation[sub].source+"'.");
-            dim.send("DRIVE_CONTROL/TRACK_ON", current_observation[sub].source);
-        }
-        else
-        {
-            dim.log("Pointing telescope to ra="+current_observation[sub].ra+" dec="+current_observation[sub].dec);
-            dim.send("DRIVE_CONTROL/TRACK", current_observation[sub].ra, current_observation[sub].dec);
-        }
-
-        dim.wait("DRIVE_CONTROL", "OnTrack", 150000); // 110s for turning and 30s for stabilizing
-
-        // Now tracking stable, switch voltage to nominal level and wait
-        // for stability.
-        service_feedback.voltageOn();
-        service_feedback.waitForVoltageOn(irq);
-
-        if (!irq)
-        {
-            dim.log("Starting calibration.");
-
-            // Calibration (2% of 20')
-            while (!irq)
-            {
-                if (irq || !takeRun("pedestal",         1000))  // 80 Hz  -> 10s
-                    continue;
-                //if (irq || !takeRun("light-pulser-ext", 1000))  // 80 Hz  -> 10s
-                //    continue;
-                break;
-            }
-
-            var tm2 = new Date();
-
-            dim.log("Starting ratescan.");
-
-            //set reference to whole camera (in case it was changed)
-            dim.send("RATE_SCAN/SET_REFERENCE_CAMERA");
-            // Start rate scan
-            dim.send("RATE_SCAN/START_THRESHOLD_SCAN", 50, 1000, -10, "default");
-
-            // Lets wait if the ratescan really starts... this might take a few
-            // seconds because RATE_SCAN configures the ftm and is waiting for
-            // it to be configured.
-            dim.wait("RATE_SCAN", "InProgress", 10000);
-            dim.wait("RATE_SCAN", "Connected", 2700000);
-
-            // Here one could implement a watchdog for the feedback as well, but what is the difference
-            // whether finally one has to find out if the feedback was in the correct state
-            // or the ratescan was interrupted?
-
-            // this line is actually some kind of hack.
-            // after the Ratescan, no data is written to disk. I don't know why, but it happens all the time
-            // So I decided to put this line here as a kind of patchwork....
-            //dim.send("FAD_CONTROL/SET_FILE_FORMAT", 6);
-
-            dim.log("Ratescan done [%.1fs, %.1fs]".$((tm2-tm1)/1000, (new Date()-tm2)/1000));
-        }
-
+        handle_task_RATESCAN(service_feedback, obs, irq);
         dim.log("Task finished [RATESCAN]");
         console.out("");
-        break; // case "RATESCAN"
+        break;
+
 
     case "RATESCAN2":
         var tm1 = new Date();
