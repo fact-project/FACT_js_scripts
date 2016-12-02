@@ -202,7 +202,6 @@ while (!processIrq(service_feedback, irq))
 
     datalogger_subscriptions.check();
 
-    // Check if current_observation.task is one of the one-time-tasks
     switch (current_observation[sub].task)
     {
     case "IDLE":
@@ -254,124 +253,11 @@ while (!processIrq(service_feedback, irq))
         console.out("");
         break;
 
-
     case "RATESCAN2":
-        var tm1 = new Date();
-
-        // This is a workaround to make sure that we really catch
-        // the new OnTrack state later and not the old one
-        dim.send("DRIVE_CONTROL/STOP");
-        dim.wait("DRIVE_CONTROL", "Initialized", 15000);
-
-        if (current_observation[sub].rstype=="dark-bias-off")
-            service_feedback.voltageOff();
-        else
-        {
-            // Switch the voltage to a reduced level (Ubd)
-            var bias = dim.state("BIAS_CONTROL").name;
-            if (bias=="VoltageOn" || bias=="Ramping")
-                service_feedback.voltageOn(0);
-        }
-
-        // Open the lid if required
-        if (!current_observation[sub].lidclosed)
-            OpenLid();
-        else
-            CloseLid();
-
-        // track source/position or move to position
-        if (current_observation[sub].lidclosed)
-        {
-            dim.log("Moving telescope to zd="+current_observation[sub].zd+" az="+current_observation[sub].az);
-            dim.send("DRIVE_CONTROL/MOVE_TO", current_observation[sub].zd, current_observation[sub].az);
-            v8.sleep(3000);
-            dim.wait("DRIVE_CONTROL", "Initialized", 150000); // 110s for turning and 30s for stabilizing
-        }
-        else
-        {
-            if (current_observation[sub].source != null)  // undefined != null -> false
-            {
-                dim.log("Pointing telescope to '"+current_observation[sub].source+"'.");
-                dim.send("DRIVE_CONTROL/TRACK_ON", current_observation[sub].source);
-            }
-            else
-            {
-                dim.log("Pointing telescope to ra="+current_observation[sub].ra+" dec="+current_observation[sub].dec);
-                dim.send("DRIVE_CONTROL/TRACK", current_observation[sub].ra, current_observation[sub].dec);
-            }
-
-            dim.wait("DRIVE_CONTROL", "OnTrack", 150000); // 110s for turning and 30s for stabilizing
-        }
-
-        // Now tracking stable, switch voltage to nominal level and wait
-        // for stability.
-        if (current_observation[sub].rstype!="dark-bias-off")
-        {
-            service_feedback.voltageOn();
-            service_feedback.waitForVoltageOn(irq);
-        }
-
-        if (!irq)
-        {
-            var tm2 = new Date();
-
-            dim.log("Starting ratescan 2/1 ["+current_observation[sub].rstype+"]");
-
-            //set reference to whole camera (in case it was changed)
-            dim.send("RATE_SCAN/SET_REFERENCE_CAMERA");
-            // Start rate scan
-            dim.send("RATE_SCAN/START_THRESHOLD_SCAN", 50, 300, 20, current_observation[sub].rstype);
-
-            // Lets wait if the ratescan really starts... this might take a few
-            // seconds because RATE_SCAN configures the ftm and is waiting for
-            // it to be configured.
-            dim.wait("RATE_SCAN", "InProgress", 10000);
-            //FIXME: discuss what best value is here
-            dim.wait("RATE_SCAN", "Connected", 2700000);//45min
-            //dim.wait("RATE_SCAN", "Connected", 1200000);//3.3h
-
-            // Here one could implement a watchdog for the feedback as well, but what is the difference
-            // whether finally one has to find out if the feedback was in the correct state
-            // or the ratescan was interrupted?
-
-            // this line is actually some kind of hack.
-            // after the Ratescan, no data is written to disk. I don't know why, but it happens all the time
-            // So I decided to put this line here as a kind of patchwork....
-            //dim.send("FAD_CONTROL/SET_FILE_FORMAT", 6);
-
-            dim.log("Ratescan 2/1 done [%.1fs, %.1fs]".$((tm2-tm1)/1000, (new Date()-tm2)/1000));
-        }
-
-        if (!irq)
-        {
-            var tm2 = new Date();
-
-            dim.log("Starting ratescan 2/2 ["+current_observation[sub].rstype+"]");
-
-            // Start rate scan
-            dim.send("RATE_SCAN/START_THRESHOLD_SCAN", 300, 1000, 100, current_observation[sub].rstype);
-
-            // Lets wait if the ratescan really starts... this might take a few
-            // seconds because RATE_SCAN configures the ftm and is waiting for
-            // it to be configured.
-            dim.wait("RATE_SCAN", "InProgress", 10000);
-            dim.wait("RATE_SCAN", "Connected", 2700000);
-
-            // Here one could implement a watchdog for the feedback as well, but what is the difference
-            // whether finally one has to find out if the feedback was in the correct state
-            // or the ratescan was interrupted?
-
-            // this line is actually some kind of hack.
-            // after the Ratescan, no data is written to disk. I don't know why, but it happens all the time
-            // So I decided to put this line here as a kind of patchwork....
-            //dim.send("FAD_CONTROL/SET_FILE_FORMAT", 6);
-
-            dim.log("Ratescan 2/2 done [%.1fs, %.1fs]".$((tm2-tm1)/1000, (new Date()-tm2)/1000));
-        }
-
+        handle_task_RATESCAN2(current_observation[sub], service_feedback);
         dim.log("Task finished [RATESCAN2]");
         console.out("");
-        break; // case "RATESCAN2"
+        break;
 
     case "CUSTOM":
         handle_task_CUSTOM(current_observation[sub], service_feedback);
