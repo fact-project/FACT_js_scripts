@@ -112,8 +112,7 @@ sub_counter.onchange = monitor_clock_conditioner;
 
 
 var sub_connections = new Subscription("FAD_CONTROL/CONNECTIONS");
-var sub_startrun = new Subscription("FAD_CONTROL/START_RUN");
-sub_startrun.get(5000);
+
 
 
 var sub_incomplete = new Subscription("FAD_CONTROL/INCOMPLETE");

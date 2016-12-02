@@ -117,8 +117,10 @@ function takeRun(type, count, time, func)
         count = -1;
     if (!time)
         time = -1;
-
+    var sub_startrun = new Subscription("FAD_CONTROL/START_RUN");
+    sub_startrun.get(5000);
     var nextrun = sub_startrun.get().obj['next'];
+    sub_startrun.close();
     dim.log("Take run %3d".$(nextrun)+": N="+count+" T="+time+"s ["+type+"]");
 
     // FIXME: Replace by callback?
