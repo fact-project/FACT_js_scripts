@@ -48,7 +48,3 @@ function handle_task_OVTEST(service_feedback, irq){
     take_single_pe_runs_with_different_voltages(service_feedback, irq);
     service_feedback.voltageOff();
 }
-
-        dim.log("Task finished [OVTEST]");
-        console.out("");
-        break;
