@@ -1,7 +1,3 @@
-/**
- * @fileOverview This file has functions related to documenting JavaScript.
- * @author <a href="mailto:thomas.bretz@epfl.ch">Thomas Bretz</a>
- */
 'use strict';
 include('scripts/Observation_class.js');
 include('scripts/getSchedule.js');
@@ -39,6 +35,22 @@ include('scripts/getTimeSinceLastDrsCalib.js');
 var irq;
 include('scripts/irq_setting_functions.js');
 
+/*
+function is_sunrise(){
+    var was_up_an_hour_ago = Sun.horizon("nautical", one_hour_ago).isUp;
+    var is_up_now = Sun.horizon("nautical", now).isUp;
+    return !was_up_an_hour_ago && is_up_now;
+}
+*/
+var is_sunrise = (function () {
+    var was_up_before = Sun.horizon("nautical").isUp;
+    return function () {
+        var is_up_now = Sun.horizon("nautical").isUp;
+        var is_sunrise_ = !was_up_before && is_up_now;
+        was_up_before = is_up_now;
+        return is_sunrise_;
+    }
+})();
 
 
 dim.log("Start: "+__FILE__+" ["+__DATE__+"]");
@@ -106,11 +118,18 @@ var run = -2; // get_index_of_current_observation never called
 var sub;
 var lastId;
 var nextId;
-var sun = Sun.horizon(-12);
 var system_on;  // undefined
 
 while (!processIrq(service_feedback, irq))
 {
+    var current_observation = get_current_observation()
+    var next_observation = get_next_observation()
+
+    if (current_observation == undefined){
+        v8.sleep(1000);
+        continue;
+    }
+
     // Check if observation position is still valid
     // If source position has changed, set run=0
     var idxObs = get_index_of_current_observation();
@@ -126,11 +145,7 @@ while (!processIrq(service_feedback, irq))
         continue;
     }
 
-    // Check if we have to take action do to sun-rise
-    var was_up = sun.isUp;
-    sun = Sun.horizon(-12);
-    if (!was_up && sun.isUp)
-    {
+    if (is_sunrise()){
         console.out("");
         dim.log("Sun rise detected.... automatic shutdown initiated!");
         // FIXME: State check?
@@ -183,10 +198,10 @@ while (!processIrq(service_feedback, irq))
     }
 
     // Check if sun is still up... only DATA and */
-    if ((obs[sub].task=="DATA" || obs[sub].task=="RATESCAN" || obs[sub].task=="RATESCAN2" ) && sun.isUp)
+    if ((obs[sub].task=="DATA" || obs[sub].task=="RATESCAN" || obs[sub].task=="RATESCAN2" ) && Sun.horizon(-12).isUp)
     {
         var now = new Date();
-        var remaining = (sun.set - now)/60000;
+        var remaining = (Sun.horizon(-12).set - now)/60000;
         console.out(now.toUTCString()+" - "+obs[sub].task+": Sun above FACT-horizon: sleeping 1min, remaining %.1fmin".$(remaining));
         v8.sleep(60000);
         continue;
@@ -200,8 +215,8 @@ while (!processIrq(service_feedback, irq))
 
     // It is not ideal that we allow the drive to be on during day time, but
     // otherwise it is difficult to allow e.g. the STARTUP at the beginning of the night
-    var power_states = sun.isUp || !system_on ? [ "DriveOff", "SystemOn" ] : [ "SystemOn" ];
-    var drive_states = sun.isUp || !system_on ? undefined : [ "Initialized", "Tracking", "OnTrack" ];
+    var power_states = Sun.horizon(-12).isUp || !system_on ? [ "DriveOff", "SystemOn" ] : [ "SystemOn" ];
+    var drive_states = Sun.horizon(-12).isUp || !system_on ? undefined : [ "Initialized", "Tracking", "OnTrack" ];
     check_states_again(power_states, drive_states);
 
     datalogger_subscriptions.check();
@@ -660,8 +675,7 @@ while (!processIrq(service_feedback, irq))
 
             // Now we switch on the voltage and a significant amount of
             // time has been passed, so do the check again.
-            sun = Sun.horizon(-12);
-            if (!was_up && sun.isUp)
+            if (!was_up && Sun.horizon(-12).isUp)
             {
                 dim.log("Sun rise detected....");
                 continue;
