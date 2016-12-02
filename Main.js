@@ -204,71 +204,71 @@ while (!processIrq(service_feedback, irq))
 
     switch (current_observation[sub].task)
     {
-    case "IDLE":
-        v8.sleep(5000);
-        continue;
+        case "IDLE":
+            v8.sleep(5000);
+            continue;
 
-    case "SUSPEND":
-    case "SLEEP":
-        Shutdown(service_feedback, irq, "sleep");
-        dim.log("Task finished [SLEEP].");
-        console.out("");
-        sub++;
-        continue;
+        case "SUSPEND":
+        case "SLEEP":
+            Shutdown(service_feedback, irq, "sleep");
+            dim.log("Task finished [SLEEP].");
+            console.out("");
+            sub++;
+            continue;
 
-    case "STARTUP":
-        StartUp(service_feedback, irq);
-        dim.log("Task finished [STARTUP]");
-        console.out("");
-        break;
+        case "STARTUP":
+            StartUp(service_feedback, irq);
+            dim.log("Task finished [STARTUP]");
+            console.out("");
+            break;
 
-    case "SHUTDOWN":
-        Shutdown(service_feedback, irq, "singlepe");
-        sub++;
-        dim.log("Task finished [SHUTDOWN]");
-        console.out("");
-        continue;
+        case "SHUTDOWN":
+            Shutdown(service_feedback, irq, "singlepe");
+            sub++;
+            dim.log("Task finished [SHUTDOWN]");
+            console.out("");
+            continue;
 
-    case "DRSCALIB":
-        doDrsCalibration(irq, "drscalib");  // will switch the voltage off
-        dim.log("Task finished [DRSCALIB]");
-        console.out("");
-        break;
+        case "DRSCALIB":
+            doDrsCalibration(irq, "drscalib");
+            dim.log("Task finished [DRSCALIB]");
+            console.out("");
+            break;
 
-    case "SINGLEPE":
-        handle_task_SINGLEPE(service_feedback, irq);
-        dim.log("Task finished [SINGLE-PE]");
-        console.out("");
-        break;
+        case "SINGLEPE":
+            handle_task_SINGLEPE(service_feedback, irq);
+            dim.log("Task finished [SINGLE-PE]");
+            console.out("");
+            break;
 
-    case "OVTEST":
-        handle_task_OVTEST(service_feedback, irq);
-        dim.log("Task finished [OVTEST]");
-        console.out("");
-        break;
+        case "OVTEST":
+            handle_task_OVTEST(service_feedback, irq);
+            dim.log("Task finished [OVTEST]");
+            console.out("");
+            break;
 
-    case "RATESCAN":
-        handle_task_RATESCAN(service_feedback, obs, irq);
-        dim.log("Task finished [RATESCAN]");
-        console.out("");
-        break;
+        case "RATESCAN":
+            handle_task_RATESCAN(service_feedback, obs, irq);
+            dim.log("Task finished [RATESCAN]");
+            console.out("");
+            break;
 
-    case "RATESCAN2":
-        handle_task_RATESCAN2(current_observation[sub], service_feedback);
-        dim.log("Task finished [RATESCAN2]");
-        console.out("");
-        break;
+        case "RATESCAN2":
+            handle_task_RATESCAN2(current_observation[sub], service_feedback);
+            dim.log("Task finished [RATESCAN2]");
+            console.out("");
+            break;
 
-    case "CUSTOM":
-        handle_task_CUSTOM(current_observation[sub], service_feedback);
-        dim.log("Task finished [CUSTOM].");
-        console.out("");
-        break;
+        case "CUSTOM":
+            handle_task_CUSTOM(current_observation[sub], service_feedback);
+            dim.log("Task finished [CUSTOM].");
+            console.out("");
+            break;
 
-    case "DATA":
-        handle_task_DATA(service_feedback, current_observation, next_observation, run, sub, irq);
-        run++;
-        continue;
+        case "DATA":
+            handle_task_DATA(service_feedback, current_observation, next_observation, run, sub, irq);
+            run++;
+            continue;
     }
 
     if (next_observation!=undefined && sub==current_observation.length-1)
