@@ -268,9 +268,7 @@ function takeRun(type, count, time, func)
     // FIXME: What if the ext1 is not enabled in the configuration?
     if (type=="data")
     {
-        var dim_trg = new Subscription("FAD_CONTROL/TRIGGER_COUNTER");
-        var counter = dim_trg.get(3000);
-
+        var counter = FadControl.get_trigger_counter(3000);
         // The check on physics and pedestal triggers is to ensure that
         // there was at least a chance to receive any event (e.g. in case
         // of an interrupt this might not be the case)
@@ -278,7 +276,6 @@ function takeRun(type, count, time, func)
             (counter.data['N_trg']>1000 || counter.data['N_ped']>5) &&
             counter.data['N_ext1']==0) // 'o' for open
             throw new Error("No ext1 triggers received during data taking... please check the reason and report in the logbook.");
-        dim_trg.close();
     }
 
     return true;
