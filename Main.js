@@ -167,7 +167,7 @@ while (!processIrq(service_feedback, irq))
     if (is_new_next_observation(next_observation)){
         if (next_observation)
             dim.log("Next observation scheduled for "+next_observation.start.toUTCString()+" [id="+next_observation.id+"]");
-        else:
+        else
             dim.log("No further observation scheduled.");
         console.out("");
     }
