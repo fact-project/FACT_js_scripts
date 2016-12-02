@@ -95,5 +95,24 @@ function Shutdown(service_feedback, irq, type)
     console.out("");
 
     sub.close();
+    system_on = false;  // this is a global variable!
 }
 
+function StartUp(service_feedback, irq){
+    CloseLid();
+    doDrsCalibration(irq, "startup");  // will switch the voltage off
+
+    if (irq)
+        return;
+
+    service_feedback.voltageOn();
+    service_feedback.waitForVoltageOn(irq);
+
+    // Before we can switch to 3000 we have to make the right DRS calibration
+    dim.log("Taking single p.e. run.");
+    while (!irq && !takeRun("single-pe", 10000));
+
+    // It is unclear what comes next, so we better switch off the voltage
+    service_feedback.voltageOff();
+    system_on = true;  // this is a global variable!
+}
