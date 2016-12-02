@@ -1,9 +1,16 @@
 'use strict';
+include('scripts/FadControl.js');
+include('scripts/feedback.js');
+include('scripts/datalogger.js');
+
+// Dim Servers
+var service_feedback = Feedback();
+var datalogger_subscriptions = Datalogger();
+
 include('scripts/check_power_on_time.js');
 include('scripts/check_states_early_not_sure_how_to_name_this.js');
 include('scripts/CheckStates.js');
 include('scripts/crateReset.js');
-include('scripts/datalogger.js');
 include('scripts/do_assert_gps_is_locked.js');
 include('scripts/do_bias_calibration_if_needed.js');
 include('scripts/doCheckClockConditioner.js');
@@ -12,7 +19,6 @@ include('scripts/doDrsCalibration.js');
 include('scripts/do_power_on_drive.js');
 include('scripts/doSetupDaq.js');
 include('scripts/do_trigger_off_if_on.js');
-include('scripts/feedback.js');
 include('scripts/Func.js');
 include('scripts/getSchedule.js');
 include('scripts/getTimeSinceLastDrsCalib.js');
@@ -44,6 +50,8 @@ include('scripts/irq_setting_functions.js');
 //-------------------- Global Variables ---------------------------------------
 var system_on;  // a kind of 'short' total system state
                 // read it as "should the entire system be on right now?"
+
+
 
 // --------- include of functions, which alter global variables
 include('scripts/shutdown.js');
@@ -84,8 +92,6 @@ if (!$['schedule-database'])
 
 
 dim.onchange['FEEDBACK'] = reschedule_if_high_currents;
-var service_feedback = Feedback();
-var datalogger_subscriptions = Datalogger();
 
 // ----------------------------------------------------------------
 // Do a standard startup to bring the system in into a well

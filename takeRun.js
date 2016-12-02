@@ -1,34 +1,6 @@
 'use strict';
 
 // ================================================================
-//  Code related to monitoring the fad system
-// ================================================================
-
-
-function FadIncomplete_onchange_function(evt)
-{
-    if (!evt.data)
-        return;
-
-    var inc = evt.obj['incomplete'];
-    if (!inc || inc>0xffffffffff)
-        return;
-
-    if (incomplete>0)
-        return;
-
-    if (dim.state("MCP").name!="TakingData")
-        return;
-
-    console.out("");
-    dim.log("Incomplete event ["+inc+","+incomplete+"] detected, sending MCP/STOP");
-
-    incomplete = inc;
-    dim.send("MCP/STOP");
-}
-
-
-// ================================================================
 //  Code related to taking data
 // ================================================================
 
@@ -117,10 +89,8 @@ function takeRun(type, count, time, func)
         count = -1;
     if (!time)
         time = -1;
-    var sub_startrun = new Subscription("FAD_CONTROL/START_RUN");
-    sub_startrun.get(5000);
-    var nextrun = sub_startrun.get().obj['next'];
-    sub_startrun.close();
+
+    var nextrun = FadControl.get_startrun().obj['next'];
     dim.log("Take run %3d".$(nextrun)+": N="+count+" T="+time+"s ["+type+"]");
 
     // FIXME: Replace by callback?
@@ -176,17 +146,13 @@ function takeRun(type, count, time, func)
             (this.last!="Critical"  && this.last!="OnStandby"))
         {
             console.out("Feedback state changed from "+this.last+" to "+state.name+" [takeRun.js]");
-
-            // Includes FAD_CONTROL/CLOSE_ALL_OPEN_FILES
             dim.send("MCP/STOP");
         }
 
         this.last=state.name;
     }
 
-    // Here we could check and handle fad losses
-
-    incomplete = 0;
+    FadControl.reset_incomplete();
 
     var start = true;
 
@@ -275,7 +241,7 @@ function takeRun(type, count, time, func)
     // REMOVE watchdog
     dim.onchange['FEEDBACK'] = callback;
 
-    if (incomplete)
+    if (FadControl.get_incomplete_())
     {
         console.out("");
         console.out(" - MCP:         "+dim.state("MCP").name);
@@ -286,7 +252,7 @@ function takeRun(type, count, time, func)
         dim.wait("FAD_CONTROL", "Connected", 3000);
         dim.wait("MCP",         "Idle",      3000);
 
-        var str = incomplete.toString(2);
+        var str = FadControl.get_incomplete_().toString(2);
         var len = str.length;
 
         var list = [];
