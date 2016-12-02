@@ -52,14 +52,17 @@ var is_sunrise = (function () {
     }
 })();
 
-var has_obsersation_target_changed = (function () {
+var make_observation_tracking_function = (function () {
     var last_observation;
     return function (observation) {
         var has_changed = last_observation != observation;
         last_observation = observation;
         return has_changed;
     }
-})();
+});
+var has_obsersation_target_changed = make_observation_tracking_function();
+var is_new_next_observation = make_observation_tracking_function();
+
 
 
 dim.log("Start: "+__FILE__+" ["+__DATE__+"]");
@@ -125,7 +128,6 @@ console.out("");
 
 var run = -2; // get_index_of_current_observation never called
 var sub;
-var nextId;
 var system_on;  // undefined
 
 while (!processIrq(service_feedback, irq))
@@ -172,19 +174,12 @@ while (!processIrq(service_feedback, irq))
         run = 0;
     }
 
-
-    if (next_observation && nextId!=next_observation.id)
-    {
-        dim.log("Next observation scheduled for "+next_observation.start.toUTCString()+" [id="+next_observation.id+"]");
+    if (is_new_next_observation(next_observation)){
+        if (next_observation)
+            dim.log("Next observation scheduled for "+next_observation.start.toUTCString()+" [id="+next_observation.id+"]");
+        else:
+            dim.log("No further observation scheduled.");
         console.out("");
-        nextId = next_observation.id;
-    }
-
-    if (!next_observation && nextId)
-    {
-        dim.log("No further observation scheduled.");
-        console.out("");
-        nextId = undefined;
     }
 
     if (sub>=current_observation.length)
