@@ -115,7 +115,6 @@ check_states_later_before_data_taking_maybe();
 
 var sub_counter = new Subscription("FTM_CONTROL/COUNTER");
 sub_counter.onchange = monitor_clock_conditioner;
-var sub_connections = new Subscription("FAD_CONTROL/CONNECTIONS");
 checkSend(["MCP", "DRIVE_CONTROL", "LID_CONTROL", "FAD_CONTROL", "FEEDBACK"]);
 
 service_feedback.get(5000);

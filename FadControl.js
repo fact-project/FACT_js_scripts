@@ -11,8 +11,8 @@ var FadControl = (function() {
     sub_runs.get(5000);
     var service_drs = new Subscription("FAD_CONTROL/DRS_RUNS");
     service_drs.get(5000);
-
-
+    var sub_connections = new Subscription("FAD_CONTROL/CONNECTIONS");
+    sub_connections.get(5000);
 
     // private function, which can be plugged into Subscription.onchange.
     function FadIncomplete_onchange_function(evt)
