@@ -24,12 +24,8 @@ function take_one_single_event(){
 
     console.out("Starting drs-gain... waiting for new event");
 
-    var sub_startrun = new Subscription("FAD_CONTROL/START_RUN");
-    sub_startrun.get(5000);
     var sub_incomplete = new Subscription("FAD_CONTROL/INCOMPLETE");
     sub_incomplete.onchange = FadIncomplete_onchange_function;
-    var sub_connections = new Subscription("FAD_CONTROL/CONNECTIONS");
-    sub_connections.get(5000);
 
     var service_event = new Subscription("FAD_CONTROL/EVENT_DATA");
     while (1)
@@ -72,10 +68,7 @@ function take_one_single_event(){
 
     var event = service_event.get(3000);//, false);
     service_event.close();
-
     sub_incomplete.close();
-    sub_connections.close();
-    sub_startrun.close();
 
     console.out("Run stopped.");
 
