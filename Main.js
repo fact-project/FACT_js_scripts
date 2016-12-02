@@ -37,7 +37,6 @@ include('scripts/Hist2D.js');
 include('scripts/lid_functions.js');
 include('scripts/Observation_class.js');
 include('scripts/print.js');
-include('scripts/shutdown.js');
 include('scripts/takeRun.js');
 var irq;
 include('scripts/irq_setting_functions.js');
