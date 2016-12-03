@@ -63,7 +63,7 @@ var is_sunrise = (function () {
         var is_sunrise_ = !was_up_before && is_up_now;
         was_up_before = is_up_now;
         return is_sunrise_;
-    }
+    };
 })();
 
 var make_observation_tracking_function = (function () {
@@ -72,7 +72,7 @@ var make_observation_tracking_function = (function () {
         var has_changed = last_observation != observation;
         last_observation = observation;
         return has_changed;
-    }
+    };
 });
 var has_obsersation_target_changed = make_observation_tracking_function();
 var is_new_next_observation = make_observation_tracking_function();
@@ -135,8 +135,8 @@ var sub;
 
 while (!processIrq(service_feedback, irq))
 {
-    var current_observation = get_current_observation()
-    var next_observation = get_next_observation()
+    var current_observation = get_current_observation();
+    var next_observation = get_next_observation();
 
     if (current_observation === undefined){
         run = -1;
@@ -175,25 +175,26 @@ while (!processIrq(service_feedback, irq))
         continue;
     }
 
-    if (system_on===false && current_observation[sub].task!="STARTUP")
+    var obs = current_observation[sub];
+    if (system_on===false && obs.task!="STARTUP")
     {
         v8.sleep(1000);
         continue;
     }
 
     // Check if sun is still up... only DATA and */
-    if ((current_observation[sub].task=="DATA" || current_observation[sub].task=="RATESCAN" || current_observation[sub].task=="RATESCAN2" ) && Sun.horizon(-12).isUp)
+    if ((obs.task=="DATA" || obs.task=="RATESCAN" || obs.task=="RATESCAN2" ) && Sun.horizon(-12).isUp)
     {
         var now = new Date();
         var remaining = (Sun.horizon(-12).set - now)/60000;
-        console.out(now.toUTCString()+" - "+current_observation[sub].task+": Sun above FACT-horizon: sleeping 1min, remaining %.1fmin".$(remaining));
+        console.out(now.toUTCString()+" - "+obs.task+": Sun above FACT-horizon: sleeping 1min, remaining %.1fmin".$(remaining));
         v8.sleep(60000);
         continue;
     }
 
 
-    if (current_observation[sub].task!="IDLE" && (current_observation[sub].task!="DATA" && run>0))
-        dim.log("New task ["+current_observation[sub]+"]");
+    if (obs.task!="IDLE" && (obs.task!="DATA" && run>0))
+        dim.log("New task ["+obs+"]");
 
     // FIXME: Maybe print a warning if Drive is on during day time!
 
@@ -205,7 +206,7 @@ while (!processIrq(service_feedback, irq))
 
     datalogger_subscriptions.check();
 
-    switch (current_observation[sub].task)
+    switch (obs.task)
     {
         case "IDLE":
             v8.sleep(5000);
@@ -257,24 +258,24 @@ while (!processIrq(service_feedback, irq))
             break;
 
         case "RATESCAN2":
-            handle_task_RATESCAN2(current_observation[sub], service_feedback);
+            handle_task_RATESCAN2(obs, service_feedback);
             dim.log("Task finished [RATESCAN2]");
             console.out("");
             break;
 
         case "CUSTOM":
-            handle_task_CUSTOM(current_observation[sub], service_feedback);
+            handle_task_CUSTOM(obs, service_feedback);
             dim.log("Task finished [CUSTOM].");
             console.out("");
             break;
 
         case "DATA":
-            handle_task_DATA(service_feedback, current_observation, next_observation, run, sub, irq);
+            handle_task_DATA(service_feedback, obs, next_observation, run, irq);
             run++;
             continue;
     }
 
-    if (next_observation!=undefined && sub==current_observation.length-1)
+    if (next_observation!==undefined && sub==current_observation.length-1)
         dim.log("Next observation will start at "+next_observation.start.toUTCString()+" [id="+next_observation.id+"]");
 
     sub++;
