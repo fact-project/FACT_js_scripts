@@ -1,12 +1,11 @@
 'use strict';
 
-
 var Func = function() { };
 Func.sum = function(a, b) { return a+b; };
 Func.sq  = function(a, b) { return Math.sqrt(a*a + b*b); };
 Func.min = function(a, b) { return Math.min(a, b); };
 Func.max = function(a, b) { return Math.max(a, b); };
-Func.avg = function(arr)  { return arr.reduce(Func.Sum, 0)/arr.length; };
+Func.avg = function(arr)  { return arr.reduce(Func.sum, 0)/arr.length; };
 Func.stat = function(arr, func)
 {
     if (arr.length===0)
