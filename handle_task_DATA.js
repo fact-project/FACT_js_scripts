@@ -1,6 +1,6 @@
 'use strict';
 
-function should_pointing_position_be_changed(current_observation, sub, run, remaining){
+function should_pointing_position_be_changed(obs, run, remaining){
     // Changine pointing position and take calibration...
     //  ...every four runs (every ~20min)
     //  ...if at least ten minutes of observation time are left
@@ -9,7 +9,7 @@ function should_pointing_position_be_changed(current_observation, sub, run, rema
     return( run==0
         || (run%4==0
             && remaining>10
-            && !current_observation[sub].orbit
+            && !obs.orbit
            ));
 }
 
@@ -37,25 +37,25 @@ function calc_wobble_position(run){
     return (parseInt(run/4) + parseInt(new Date()/1000/3600/24-0.5))%2+1;
 }
 
-function change_pointing_position(service_feedback, run, current_observation){
+function change_pointing_position(service_feedback, run, obs){
     // I think, this means, reduce by -1.1V which is clear from the call right?
     service_feedback.voltageOn(0);
 
     var wobble = calc_wobble_position(run);
-    var angle  = current_observation[sub].angle == null ? Math.random()*360 : current_observation[sub].angle;
+    var angle  = obs.angle === null ? Math.random()*360 : obs.angle;
 
     // This is a workaround to make sure that we really catch
     // the new OnTrack state later and not the old one
     dim.send("DRIVE_CONTROL/STOP");
     dim.wait("DRIVE_CONTROL", "Initialized", 15000);
 
-    if (current_observation[sub].orbit){
-        dim.log("Pointing telescope to '"+current_observation[sub].source+"' [orbit="+current_observation[sub].orbit+"min, angle="+angle+"]");
-        dim.send("DRIVE_CONTROL/TRACK_ORBIT", angle, current_observation[sub].orbit, current_observation[sub].source);
+    if (obs.orbit){
+        dim.log("Pointing telescope to '"+obs.source+"' [orbit="+obs.orbit+"min, angle="+angle+"]");
+        dim.send("DRIVE_CONTROL/TRACK_ORBIT", angle, obs.orbit, obs.source);
     }
     else{
-        dim.log("Pointing telescope to '"+current_observation[sub].source+"' [wobble="+wobble+"]");
-        dim.send("DRIVE_CONTROL/TRACK_WOBBLE", wobble, current_observation[sub].source);
+        dim.log("Pointing telescope to '"+obs.source+"' [wobble="+wobble+"]");
+        dim.send("DRIVE_CONTROL/TRACK_WOBBLE", wobble, obs.source);
     }
 }
 
@@ -99,14 +99,14 @@ function take_5minutes_data(irq){
 
 }
 
-function handle_task_DATA(service_feedback, current_observation, next_observation, run, sub, irq){
+function handle_task_DATA(service_feedback, obs, next_observation, run, irq){
     var remaining = next_observation==undefined ? 0 : (next_observation.start-new Date())/60000;
     dim.log("Run count "+run+" [remaining "+parseInt(remaining)+"min]");
     var diff = getTimeSinceLastDrsCalib(); // in minutes
-    var point = should_pointing_position_be_changed(current_observation, sub, run, remaining);
+    var point = should_pointing_position_be_changed(obs, run, remaining);
     var drscal = should_a_drs_calib_be_taken(diff, run, remaining);
 
-    if (point) change_pointing_position(service_feedback, run, current_observation);
+    if (point) change_pointing_position(service_feedback, run, obs);
     if (drscal) doDrsCalibration(irq, "data");  // will turn voltage off
     if (irq) return;
     OpenLid();
