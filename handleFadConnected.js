@@ -47,8 +47,7 @@ function handleFadConnected(wait_state)
 
     // Final state reached condition
     case "Connected":
-        var sub_con = new Subscription("FAD_CONTROL/CONNECTIONS");
-        var con = sub_con.get(5000);
+        var con = FadControl.get_connections(5000);
         var all = true;
         for (var i=0; i<40; i++)
             if (con.obj['status'][i]&66!=66)
@@ -57,7 +56,6 @@ function handleFadConnected(wait_state)
                 dim.send("FAD_CONTROL/CONNECT", i);
                 all = false;
             }
-        sub_con.close();
         return all ? "" : "Connected";
     }
 

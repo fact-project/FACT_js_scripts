@@ -16,6 +16,7 @@ var FadControl = (function() {
     var sub_trigger_counter = new Subscription("FAD_CONTROL/TRIGGER_COUNTER");
     sub_trigger_counter.get(5000);
 
+
     // private function, which can be plugged into Subscription.onchange.
     function FadIncomplete_onchange_function(evt)
     {
@@ -60,6 +61,9 @@ var FadControl = (function() {
         },
         get_drs_runs: function(timeout, requireNamed) {
             return service_drs.get(timeout, requireNamed);
+        },
+        get_connections: function(timeout, requireNamed) {
+            return sub_connections.get(timeout, requireNamed);
         },
         get_trigger_counter: function(timeout, requireNamed) {
             return sub_trigger_counter.get(timeout, requireNamed);
