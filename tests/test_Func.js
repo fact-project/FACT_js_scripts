@@ -1,5 +1,5 @@
 'use strict';
-include('scripts/Func.js');
+include('/home/dneise/operation/scripts/Func.js');
 
 var a = Array(1,2,3,4);
 console.log('tesing Func.sum with array a='+a+' should be 10');
