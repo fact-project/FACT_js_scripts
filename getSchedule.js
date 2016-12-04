@@ -5,7 +5,7 @@ function get_measurementName_by_key(){
     var db = new Database($['schedule-database']);
 
     // List of all available measurement types (see also Observation_class.js)
-    measurementName_by_key = {}
+    var measurementName_by_key = {};
     db.query("SELECT * from MeasurementType").forEach(
         function(row){
             measurementName_by_key[row.fMeasurementTypeKey] = row.fMeasurementTypeName.toUpperCase();
@@ -48,7 +48,7 @@ function get_schedule_list_from_db(){
 
     // Close db connection
     db.close();
-    return rows
+    return rows;
 }
 
 function jsonify_schedule_fData(string){
@@ -57,7 +57,7 @@ function jsonify_schedule_fData(string){
     {
         obj = JSON.parse(("{"+string+"}").replace(/\ /g, "").replace(/(\w+):/gi, "\"$1\":"));
     }
-    return obj
+    return obj;
 }
 
 function getSchedule()
@@ -73,17 +73,18 @@ function getSchedule()
     {
         var row = rows[i];
 
-        if (row.fMeasurementID == 0)
+        if (row.fMeasurementID === 0)
             entry++;
 
-        var m = { }
+        var m = { };
 
         m.task = measurementName_by_key[row.fMeasurementTypeKey];
 
         if (row.fSourceKey)
             m.source = sources_by_key[row.fSourceKey];
 
-        for (var key in jsonify_schedule_fData(row.fData))
+        var obj = jsonify_schedule_fData(row.fData);
+        for (var key in obj)
             m[key] = obj[key];
 
         if (!schedule[entry])
@@ -106,8 +107,8 @@ function getSchedule()
 
 function get_index_of_current_observation(now)
 {
-    observations = getSchedule();
-    if (now==undefined)
+    var observations = getSchedule();
+    if (now === undefined)
         now = new Date();
 
     if (isNaN(now.valueOf()))
@@ -122,8 +123,8 @@ function get_index_of_current_observation(now)
 
 function get_current_observation(now)
 {
-    observations = getSchedule();
-    if (now==undefined)
+    var observations = getSchedule();
+    if (now === undefined)
         now = new Date();
 
     if (isNaN(now.valueOf()))
@@ -138,8 +139,8 @@ function get_current_observation(now)
 
 function get_next_observation(now)
 {
-    observations = getSchedule();
-    if (now==undefined)
+    var observations = getSchedule();
+    if (now === undefined)
         now = new Date();
 
     if (isNaN(now.valueOf()))
