@@ -5,4 +5,4 @@ include ('/home/dneise/operation/scripts/getSchedule.js');
 
 
 var schedule = getSchedule();
-console.out(JSON.stringify(schedule));
+console.out(JSON.stringify(schedule, null, 2));
