@@ -1,3 +1,6 @@
+'use strict';
+
+include('scripts/Observation_class.js');
 
 function get_measurementName_by_key(){
     // Connect to database
